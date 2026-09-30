@@ -10,6 +10,8 @@ namespace SuSporKiralama.DataAccess.Konfigurasyonlar;
 /// tek bir "Ekipmanlar" tablosunda tutulur. Hangi satırın hangi tür olduğunu
 /// "EkipmanTipi" sütunu (discriminator) belirtir. Alt türe özgü sütunlar
 /// (UzunlukCm, KisiKapasitesi, Beden...) diğer türlerde NULL kalır.
+/// Alt türler için ayrı konfigürasyon dosyası açılmadı: tablo, discriminator ve ortak
+/// sütunlar kök sınıfta (Ekipman) ayarlanır; alt türlerin ek bir eşleme ihtiyacı yok.
 /// </summary>
 public class EkipmanConfiguration : IEntityTypeConfiguration<Ekipman>
 {

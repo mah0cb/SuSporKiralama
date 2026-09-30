@@ -20,6 +20,8 @@ Solution, entity'ler, EF Core, migration, örnek veri.
 
 **Not (30.09.2026):** Entities / DataAccess / Business projeleri (net10.0) oluşturuldu. Ekipman hiyerarşisi (SupBoard, Kano, CanYelegi) TPH ile tek tabloda; `UcretHesapla(sure, birimUcret)` polimorfik, iade anında kiralama sırasındaki fiyat (`UygulananBirimUcret`) kullanılabilsin diye birim ücret parametre olarak alınıyor. Geçmişi olan müşteri/personel/ekipman silinmez (Restrict), pasife alınır (`AktifMi` / `HizmetDisi`). InitialCreate uygulandı; idempotent seed yükleniyor. Sonraki aşamalar için açık noktalar: depozito alındı/iade takibi (Odeme'de tür alanı) ve eşzamanlı kiralamaya karşı RowVersion 3. aşamada değerlendirilecek.
 
+**Karar (2. aşama):** RowVersion eklenmeyecek; uygulama tek bilgisayarda çalışan bir masaüstü uygulaması, eşzamanlı güncelleme riski yok. Depozito takibi 3. aşamada ele alınacak.
+
 ## 2. Business CRUD
 Musteri, Ekipman ve Personel için servis sınıfları; servisler bağımlılıklarını constructor üzerinden alır (ileride UI'da dependency injection). İş kuralı doğrulamaları (ör. aktif kiralaması olan müşteri/ekipman silinemez, ekipman kodu benzersiz). Ortak bir temel exception'dan türeyen özel exception hiyerarşisi (ör. IsKuraliException → KayitBulunamadiException, DogrulamaException).
 
