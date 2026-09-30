@@ -1,4 +1,4 @@
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -72,6 +72,45 @@ public sealed class TestVeritabani : IDisposable
         kiralama.TeslimEt(baslangic);
         if (!aktif)
             kiralama.Tamamla(baslangic.AddHours(2));
+
+        Context.Kiralamalar.Add(kiralama);
+        Context.SaveChanges();
+        return kiralama;
+    }
+
+    public Kano KanoEkle(string kod = "KANO-001", EkipmanDurumu durum = EkipmanDurumu.Musait)
+    {
+        var kano = new Kano(kod, "Pelican", "Argo", 600m, 2500m, 1) { Durum = durum };
+        Context.Ekipmanlar.Add(kano);
+        Context.SaveChanges();
+        return kano;
+    }
+
+    public CanYelegi YelekEkle(string kod = "YLK-001")
+    {
+        var yelek = new CanYelegi(kod, "Decathlon", "Itiwit", 50m, 200m, Beden.M);
+        Context.Ekipmanlar.Add(yelek);
+        Context.SaveChanges();
+        return yelek;
+    }
+
+    /// <summary>
+    /// Verilen aralık ve durumda bir kiralamayı servisi kullanmadan kurar (entity metotlarıyla).
+    /// Aktif/Tamamlandi için başlangıçta teslim edilmiş, Tamamlandi için planlanan bitişte iade edilmiş sayılır.
+    /// </summary>
+    public Kiralama KiralamaKur(Musteri musteri, Personel personel, DateTime baslangic, DateTime bitis,
+        KiralamaDurumu durum, params Ekipman[] ekipmanlar)
+    {
+        var kiralama = new Kiralama(musteri.Id, personel.Id, baslangic, bitis);
+        foreach (var ekipman in ekipmanlar)
+            kiralama.Detaylar.Add(new KiralamaDetay(ekipman));
+
+        if (durum is KiralamaDurumu.Aktif or KiralamaDurumu.Tamamlandi)
+            kiralama.TeslimEt(baslangic);
+        if (durum == KiralamaDurumu.Tamamlandi)
+            kiralama.Tamamla(bitis);
+        if (durum == KiralamaDurumu.IptalEdildi)
+            kiralama.IptalEt();
 
         Context.Kiralamalar.Add(kiralama);
         Context.SaveChanges();

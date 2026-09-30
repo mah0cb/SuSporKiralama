@@ -12,7 +12,7 @@ public interface IEkipmanServisi : ICrudServisi<Ekipman>
     /// </summary>
     List<TEkipman> Filtrele<TEkipman>(EkipmanDurumu? durum = null) where TEkipman : Ekipman;
 
-    /// <summary>Şu an Musait durumdaki ekipmanlar (zaman bazlı müsaitlik 3. aşamada).</summary>
+    /// <summary>Şu an Musait durumdaki ekipmanlar. Zaman aralığına göre müsaitlik için IMusaitlikServisi kullanılır.</summary>
     List<Ekipman> MusaitleriGetir();
 
     void FiyatGuncelle(int id, decimal yeniBirimUcret);
