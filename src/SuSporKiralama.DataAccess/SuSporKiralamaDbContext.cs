@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SuSporKiralama.DataAccess.Seed;
 using SuSporKiralama.Entities;
 using SuSporKiralama.Entities.Soyut;
 
@@ -19,6 +20,19 @@ public class SuSporKiralamaDbContext(DbContextOptions<SuSporKiralamaDbContext> o
     public DbSet<KiralamaDetay> KiralamaDetaylari => Set<KiralamaDetay>();
     public DbSet<HasarKaydi> HasarKayitlari => Set<HasarKaydi>();
     public DbSet<Odeme> Odemeler => Set<Odeme>();
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        // Örnek veri; "dotnet ef database update" ve Database.Migrate() sonrasında çalışır.
+        // Hem senkron hem asenkron yol tanımlanmalı; ikisi de aynı idempotent metodu çağırır.
+        optionsBuilder
+            .UseSeeding((context, _) => OrnekVeri.Yukle((SuSporKiralamaDbContext)context))
+            .UseAsyncSeeding((context, _, _) =>
+            {
+                OrnekVeri.Yukle((SuSporKiralamaDbContext)context);
+                return Task.CompletedTask;
+            });
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
