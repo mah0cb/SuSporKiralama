@@ -6,7 +6,7 @@ Proje dönem boyunca 10 aşamada geliştirilir. Her aşama bitince burada "tamam
 |---|---|---|
 | 1 | İskelet + veritabanı | ✅ Tamamlandı |
 | 2 | Business CRUD + test projesi | ✅ Tamamlandı |
-| 3 | Kiralama akışı + ücret/kiralama testleri | Bekliyor |
+| 3 | Kiralama akışı + ücret/kiralama testleri | ✅ Tamamlandı |
 | 4 | Giriş ve raporlama | Bekliyor |
 | 5 | Yapay zeka servisi | Bekliyor |
 | 6 | DevExpress kurulumu | Bekliyor |
@@ -27,8 +27,10 @@ Musteri, Ekipman ve Personel için servis sınıfları; servisler bağımlılık
 
 **Not (30.09.2026):** `ICrudServisi<T>` + soyut `CrudServisiTemel<T>` (Template Method): ortak akış sabit, alt servisler `EklemeOncesiKontrol` / `GuncellemeOncesiKontrol` / `SilmeOncesiKontrol` kancalarını override eder. Exception'lar: `IsKuraliException` (soyut) → `DogrulamaException`, `KayitBulunamadiException`, `BenzersizlikIhlaliException`, `IliskiliKayitVarException`, `IslemYapilamazException`. Beklenmeyen veritabanı hataları sarmalanmaz (10. aşama). Kural ihlaliyle reddedilen `Guncelle`, nesneyi `IRepository.Reload` ile veritabanındaki haline döndürür; paylaşılan DbContext'te geçersiz değişiklik sonraki bir `SaveChanges` ile yazılamaz. Telefon `05XXXXXXXXX` biçimine normalize edilir. Ekipman Kirada durumuna elle alınamaz / Kirada'dan elle çıkarılamaz. Şifre en az 8 karakter; genel `Guncelle` şifre hash'ini değiştiremez; en az bir aktif Admin kalır. Testler bellekte SQLite kullanır; şema `CreateTables` ile oluşturulduğu için örnek veri yüklenmez. 62 test başarılı.
 
-## 3. Kiralama akışı
+## 3. Kiralama akışı — ✅ Tamamlandı
 Müsaitlik kontrolü (zaman aralığı çakışması + ekipman durumu), kiralama başlatma, iade (polimorfik UcretHesapla ile ücret, gecikme, hasar bedeli, ekipman durumunun geri alınması), ödeme kaydı, depozito takibi. Mevcut test projesine ücret hesabı, çakışma ve kiralama/iade senaryolarının testleri eklenir.
+
+**Not (30.09.2026):** Durum makinesi `Kiralama` entity'sinde: Rezerve →`TeslimEt`→ Aktif →`Tamamla`→ Tamamlandi, Rezerve →`IptalEt`→ IptalEdildi; `Durum` ve ücret/zaman alanları private set, geçersiz geçişte `InvalidOperationException` (servis `IslemYapilamazException`'a çevirir). `IMusaitlikServisi` ayrı servis (5. aşamadaki yapay zeka önerisi kullanacak): yarı açık [başlangıç, bitiş) çakışması Rezerve/Aktif kiralamalara karşı; iade edilmemiş gecikmiş kiralamada ekipman şimdiye kadar dolu sayılır; Bakımda/Hizmet Dışı hiç müsait değil. `KiralamaServisi` `CrudServisiTemel`'den türemez (genel Sil/Guncelle yok); her işlem önce tüm kontroller, sonra tek `SaveChanges`. Servisler "şimdi"yi `TimeProvider`'dan alır, testlerde `FakeTimeProvider`. Depozito teslimde ekipmanların o anki depozito toplamı olarak alınır; iadede hasar önce depozitodan mahsup edilir (`Kiralama.DepozitoMahsupHesapla`), aşan kısım borca eklenir; `KalanBorc = ToplamUcret - mahsup - ödemeler`. Ödeme yalnızca tamamlanmış kiralamaya ve kalan borcu aşmadan alınır. Migration `KiralamaDepozitoTakibi` (DepozitoTutari, DepozitoDurumu, DepozitoMahsupTutari); mevcut tamamlanmış kayıtlarda depozito iade edilmiş sayılır. Ayrıca 2. aşamadan kalan iki düzeltme: genel `Ekle(Personel)` hash'lenmemiş şifreyi reddeder; `ArgumentException` parametre adsız fırlatılır. 153 test başarılı.
 
 ## 4. Giriş ve raporlama
 PBKDF2 ile şifre doğrulama, oturumdaki personel bilgisi, rol bazlı yetki (Admin personel ve fiyat yönetebilir). Dashboard için rapor sorguları (günlük/aylık gelir, en çok kiralanan ekipman, doluluk oranı) DTO'lar ile.
