@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SuSporKiralama.Business/SuSporKiralama.Business.csproj" />
+    <Project Path="src/SuSporKiralama.DataAccess/SuSporKiralama.DataAccess.csproj" />
+    <Project Path="src/SuSporKiralama.Entities/SuSporKiralama.Entities.csproj" />
+  </Folder>
+</Solution>
