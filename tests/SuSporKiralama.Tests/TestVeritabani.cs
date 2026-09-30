@@ -63,14 +63,15 @@ public sealed class TestVeritabani : IDisposable
         return sup;
     }
 
-    /// <summary>Kiralama servisi 3. aşamada gelecek; geçmiş kaydı şimdilik doğrudan eklenir.</summary>
+    /// <summary>Servisi kullanmadan geçmiş (Tamamlandi) ya da süren (Aktif) bir kiralama kaydı ekler.</summary>
     public Kiralama KiralamaEkle(Musteri musteri, Personel personel, Ekipman ekipman, bool aktif = false)
     {
         var baslangic = DateTime.Now.AddHours(-3);
         var kiralama = new Kiralama(musteri.Id, personel.Id, baslangic, baslangic.AddHours(2));
         kiralama.Detaylar.Add(new KiralamaDetay(ekipman));
+        kiralama.TeslimEt(baslangic);
         if (!aktif)
-            kiralama.Durum = KiralamaDurumu.Tamamlandi;
+            kiralama.Tamamla(baslangic.AddHours(2));
 
         Context.Kiralamalar.Add(kiralama);
         Context.SaveChanges();

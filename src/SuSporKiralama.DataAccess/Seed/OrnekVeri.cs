@@ -67,37 +67,40 @@ public static class OrnekVeri
 
         context.SaveChanges(); // Id'ler oluştu; kiralamalarda kullanılabilir.
 
-        // 2) Kiralamalar: 3 tamamlanmış + 1 aktif
+        // 2) Kiralamalar: 3 tamamlanmış + 1 aktif + 1 rezervasyon.
+        // Durumlar entity metotlarıyla (TeslimEt/Tamamla) değiştirilir; ücret, depozito ve
+        // ekipman durumu uygulamadaki iade akışıyla aynı kurallarla hesaplanır.
         var bugun = DateTime.Today;
-
-        var k1 = KiralamaOlustur(musteriler[0], personel, bugun.AddDays(-10).AddHours(10), TimeSpan.FromHours(2), suplar[0], yelekler[2]);
-        var k2 = KiralamaOlustur(musteriler[2], admin, bugun.AddDays(-7).AddHours(9), TimeSpan.FromHours(4), kanolar[1], yelekler[3], yelekler[5]);
-        var k3 = KiralamaOlustur(musteriler[1], personel, bugun.AddDays(-3).AddHours(14), TimeSpan.FromHours(2), suplar[2]);
-        Tamamla(k1, k1.BaslangicZamani.AddHours(2).AddMinutes(20)); // 20 dk geç: 3 saat ücretlenir
-        Tamamla(k2, k2.BaslangicZamani.AddHours(4));
-        Tamamla(k3, k3.BaslangicZamani.AddMinutes(90));
-
         var simdi = DateTime.Now;
-        var aktif = KiralamaOlustur(musteriler[3], personel, simdi.AddHours(-1), TimeSpan.FromHours(3), suplar[4], yelekler[6]);
-        foreach (var detay in aktif.Detaylar)
-            detay.Ekipman.Durum = EkipmanDurumu.Kirada;
 
-        context.Kiralamalar.AddRange(k1, k2, k3, aktif);
+        var k1 = TeslimEdilmis(musteriler[0], personel, bugun.AddDays(-10).AddHours(10), TimeSpan.FromHours(2), suplar[0], yelekler[2]);
+        k1.Tamamla(k1.BaslangicZamani.AddHours(2).AddMinutes(20)); // 20 dk geç: 3 saat ücretlenir
+
+        var k2 = TeslimEdilmis(musteriler[2], admin, bugun.AddDays(-7).AddHours(9), TimeSpan.FromHours(4), kanolar[1], yelekler[3], yelekler[5]);
+        k2.Tamamla(k2.BaslangicZamani.AddHours(4));
+
+        // k3 hasarlı iade: 300 TL hasar depozitodan (1750 TL) düşülür, ekipman Bakımda'ya alınır.
+        var k3 = TeslimEdilmis(musteriler[1], personel, bugun.AddDays(-3).AddHours(14), TimeSpan.FromHours(2), suplar[2]);
+        var k3Bitis = k3.BaslangicZamani.AddMinutes(90);
+        k3.Detaylar.First().HasarKayitlari.Add(new HasarKaydi(0, "Kanat (fin) yuvasında çatlak.", 300m) { KayitTarihi = k3Bitis });
+        k3.Tamamla(k3Bitis);
+
+        var aktif = TeslimEdilmis(musteriler[3], personel, simdi.AddHours(-1), TimeSpan.FromHours(3), suplar[4], yelekler[6]);
+
+        var yarin = bugun.AddDays(1).AddHours(10);
+        var rezervasyon = KiralamaOlustur(musteriler[4], personel, yarin, TimeSpan.FromHours(2), suplar[5], yelekler[7]);
+        rezervasyon.OlusturmaTarihi = simdi;
+
+        context.Kiralamalar.AddRange(k1, k2, k3, aktif, rezervasyon);
         context.SaveChanges();
 
-        // 3) Hasar ve ödemeler (kiralama/detay Id'leri artık belli)
-        var hasarliDetay = k3.Detaylar.First();
-        var hasar = new HasarKaydi(hasarliDetay.Id, "Kanat (fin) yuvasında çatlak.", 300m) { KayitTarihi = k3.GercekBitisZamani!.Value };
-        context.HasarKayitlari.Add(hasar);
-        k3.ToplamUcret += hasar.HasarBedeli;
-
+        // 3) Ödemeler (kiralama Id'leri artık belli). Ödeme yalnızca tamamlanmış kiralamaya alınır.
         context.Odemeler.AddRange(
-            new Odeme(k1.Id, k1.ToplamUcret!.Value, OdemeTipi.Nakit, k1.GercekBitisZamani!.Value),
+            new Odeme(k1.Id, k1.KalanBorc, OdemeTipi.Nakit, k1.GercekBitisZamani!.Value),
             // Bir kiralamanın birden fazla ödemesi olabilir (1-N):
-            new Odeme(k2.Id, 500m, OdemeTipi.Nakit, k2.BaslangicZamani) { Aciklama = "Ön ödeme" },
-            new Odeme(k2.Id, k2.ToplamUcret!.Value - 500m, OdemeTipi.KrediKarti, k2.GercekBitisZamani!.Value) { Aciklama = "Kalan tutar" },
-            new Odeme(k3.Id, k3.ToplamUcret!.Value, OdemeTipi.Havale, k3.GercekBitisZamani!.Value) { Aciklama = "Hasar bedeli dahil" },
-            new Odeme(aktif.Id, 200m, OdemeTipi.KrediKarti, aktif.BaslangicZamani) { Aciklama = "Ön ödeme" });
+            new Odeme(k2.Id, 500m, OdemeTipi.Nakit, k2.GercekBitisZamani!.Value) { Aciklama = "Nakit kısmı" },
+            new Odeme(k2.Id, k2.KalanBorc - 500m, OdemeTipi.KrediKarti, k2.GercekBitisZamani!.Value) { Aciklama = "Kalan tutar" },
+            new Odeme(k3.Id, k3.KalanBorc, OdemeTipi.Havale, k3.GercekBitisZamani!.Value) { Aciklama = "Hasar bedeli depozitodan düşüldü" });
 
         context.SaveChanges();
         transaction?.Commit();
@@ -115,15 +118,12 @@ public static class OrnekVeri
         return kiralama;
     }
 
-    // Geçmiş kiralamaları tamamlanmış hale getirir; ücretler polimorfik UcretHesapla ile hesaplanır.
-    private static void Tamamla(Kiralama kiralama, DateTime bitis)
+    // Başlangıç anında teslim edilmiş (Aktif) kiralama: depozito alınır, ekipmanlar Kirada olur.
+    private static Kiralama TeslimEdilmis(Musteri musteri, Personel personel, DateTime baslangic,
+        TimeSpan planlananSure, params Ekipman[] ekipmanlar)
     {
-        var sure = bitis - kiralama.BaslangicZamani;
-        foreach (var detay in kiralama.Detaylar)
-            detay.HesaplananUcret = detay.Ekipman.UcretHesapla(sure, detay.UygulananBirimUcret);
-
-        kiralama.GercekBitisZamani = bitis;
-        kiralama.Durum = KiralamaDurumu.Tamamlandi;
-        kiralama.ToplamUcret = kiralama.Detaylar.Sum(d => d.HesaplananUcret);
+        var kiralama = KiralamaOlustur(musteri, personel, baslangic, planlananSure, ekipmanlar);
+        kiralama.TeslimEt(baslangic);
+        return kiralama;
     }
 }
