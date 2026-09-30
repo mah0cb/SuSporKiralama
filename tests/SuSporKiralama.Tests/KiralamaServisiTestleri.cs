@@ -306,6 +306,74 @@ public class KiralamaServisiTestleri : IDisposable
         DegisiklikKalmamali();
     }
 
+    // --- Ödeme ---
+
+    private Kiralama TamamlanmisKiralama()
+    {
+        var kiralama = Kapidan(Saat(12), _sup, _yelek);
+        _zaman.Advance(TimeSpan.FromHours(2));
+        _servis.IadeAl(kiralama.Id); // 2 saat SUP (300) + yelek (50) = 350
+        return kiralama;
+    }
+
+    [Fact]
+    public void OdemeEkle_KismiVeKalanOdeme_BorcKapanir()
+    {
+        var kiralama = TamamlanmisKiralama();
+
+        _servis.OdemeEkle(kiralama.Id, 100m, OdemeTipi.Nakit, "Nakit kısmı");
+        Assert.Equal(250m, kiralama.KalanBorc);
+
+        var odeme = _servis.OdemeEkle(kiralama.Id, 250m, OdemeTipi.KrediKarti);
+
+        Assert.Equal(Saat(12), odeme.OdemeTarihi);
+        Assert.Equal(0m, _servis.IdIleGetir(kiralama.Id).KalanBorc);
+        Assert.Equal(2, _db.Context.Odemeler.Count());
+    }
+
+    [Fact]
+    public void OdemeEkle_FazlaOdeme_IslemYapilamaz()
+    {
+        var kiralama = TamamlanmisKiralama();
+        _servis.OdemeEkle(kiralama.Id, 300m, OdemeTipi.Nakit);
+
+        Assert.Throws<IslemYapilamazException>(() => _servis.OdemeEkle(kiralama.Id, 50.01m, OdemeTipi.Nakit));
+
+        Assert.Equal(50m, kiralama.KalanBorc);
+        DegisiklikKalmamali();
+    }
+
+    [Fact]
+    public void OdemeEkle_HasarDepozitoyuAsinca_AsanKisimOdenebilir()
+    {
+        var kiralama = Kapidan(Saat(11));
+        _servis.IadeAl(kiralama.Id, [new HasarBilgisi(kiralama.Detaylar.Single().Id, "Delik", 2000m)]);
+
+        // 150 kiralama + (2000 - 1500 depozito) = 650
+        _servis.OdemeEkle(kiralama.Id, 650m, OdemeTipi.Havale);
+
+        Assert.Equal(0m, kiralama.KalanBorc);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-10)]
+    public void OdemeEkle_SifirVeyaNegatifTutar_DogrulamaException(decimal tutar)
+    {
+        var kiralama = TamamlanmisKiralama();
+
+        Assert.Throws<DogrulamaException>(() => _servis.OdemeEkle(kiralama.Id, tutar, OdemeTipi.Nakit));
+        DegisiklikKalmamali();
+    }
+
+    [Fact]
+    public void OdemeEkle_TamamlanmamisKiralama_IslemYapilamaz()
+    {
+        var kiralama = Kapidan(Saat(12));
+
+        Assert.Throws<IslemYapilamazException>(() => _servis.OdemeEkle(kiralama.Id, 100m, OdemeTipi.Nakit));
+    }
+
     // --- Gecikme ve sorgular ---
 
     [Fact]

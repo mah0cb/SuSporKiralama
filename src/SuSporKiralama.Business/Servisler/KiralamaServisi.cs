@@ -113,6 +113,28 @@ public class KiralamaServisi(
         kiralamaRepository.SaveChanges();
     }
 
+    // --- Ödeme ---
+
+    public Odeme OdemeEkle(int kiralamaId, decimal tutar, OdemeTipi odemeTipi, string? aciklama = null)
+    {
+        var kiralama = IdIleGetir(kiralamaId);
+
+        // Tutar iade anında kesinleşir; öncesinde fazla ödemenin sınırı belli olmaz.
+        if (kiralama.Durum != KiralamaDurumu.Tamamlandi)
+            throw new IslemYapilamazException("Ödeme yalnızca iadesi alınmış (tamamlanmış) kiralamaya eklenebilir.");
+
+        Odeme odeme = null!;
+        KuralIle(() => odeme = new Odeme(kiralama.Id, tutar, odemeTipi, Simdi) { Aciklama = aciklama });
+
+        if (tutar > kiralama.KalanBorc)
+            throw new IslemYapilamazException(
+                $"Ödeme tutarı ({tutar:N2} TL) kalan borcu ({kiralama.KalanBorc:N2} TL) aşamaz.");
+
+        kiralama.Odemeler.Add(odeme);
+        kiralamaRepository.SaveChanges();
+        return odeme;
+    }
+
     // --- Sorgular ---
 
     public List<Kiralama> AktifKiralamalar() =>

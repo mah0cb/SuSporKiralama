@@ -27,6 +27,11 @@ public interface IKiralamaServisi
     /// <summary>Sadece Rezerve kiralamalar iptal edilebilir.</summary>
     void IptalEt(int kiralamaId);
 
+    /// <summary>
+    /// Tamamlanmış kiralamaya ödeme ekler. Tutar pozitif olmalı ve kalan borcu (Kiralama.KalanBorc) aşamaz.
+    /// </summary>
+    Odeme OdemeEkle(int kiralamaId, decimal tutar, OdemeTipi odemeTipi, string? aciklama = null);
+
     List<Kiralama> AktifKiralamalar();
 
     /// <summary>Aktif olup planlanan bitişi geçmiş kiralamalar.</summary>
