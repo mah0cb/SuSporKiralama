@@ -20,6 +20,13 @@ public interface IRepository<T> where T : BaseEntity
     void Update(T entity);
     void Delete(T entity);
 
+    /// <summary>
+    /// Nesnedeki kaydedilmemiş değişiklikleri atar, değerleri veritabanından yeniden okur.
+    /// Kural ihlali nedeniyle reddedilen bir güncelleme, sonraki bir SaveChanges ile
+    /// yanlışlıkla veritabanına yazılmasın diye kullanılır.
+    /// </summary>
+    void Reload(T entity);
+
     /// <summary>Bekleyen değişiklikleri veritabanına yazar; etkilenen kayıt sayısını döner.</summary>
     int SaveChanges();
 }

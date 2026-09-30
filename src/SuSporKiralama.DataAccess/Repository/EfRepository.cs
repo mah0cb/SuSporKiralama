@@ -26,5 +26,13 @@ public class EfRepository<T>(SuSporKiralamaDbContext context) : IRepository<T> w
 
     public void Delete(T entity) => Set.Remove(entity);
 
+    public void Reload(T entity)
+    {
+        // Context'in takip etmediği (Detached) nesnede geri alınacak değişiklik yoktur.
+        var entry = Context.Entry(entity);
+        if (entry.State != EntityState.Detached)
+            entry.Reload();
+    }
+
     public int SaveChanges() => Context.SaveChanges();
 }
