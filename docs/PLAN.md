@@ -5,8 +5,8 @@ Proje dönem boyunca 10 aşamada geliştirilir. Her aşama bitince burada "tamam
 | # | Aşama | Durum |
 |---|---|---|
 | 1 | İskelet + veritabanı | ✅ Tamamlandı |
-| 2 | Business CRUD | Bekliyor |
-| 3 | Kiralama akışı + xUnit testleri | Bekliyor |
+| 2 | Business CRUD + test projesi | ✅ Tamamlandı |
+| 3 | Kiralama akışı + ücret/kiralama testleri | Bekliyor |
 | 4 | Giriş ve raporlama | Bekliyor |
 | 5 | Yapay zeka servisi | Bekliyor |
 | 6 | DevExpress kurulumu | Bekliyor |
@@ -22,11 +22,13 @@ Solution, entity'ler, EF Core, migration, örnek veri.
 
 **Karar (2. aşama):** RowVersion eklenmeyecek; uygulama tek bilgisayarda çalışan bir masaüstü uygulaması, eşzamanlı güncelleme riski yok. Depozito takibi 3. aşamada ele alınacak.
 
-## 2. Business CRUD
-Musteri, Ekipman ve Personel için servis sınıfları; servisler bağımlılıklarını constructor üzerinden alır (ileride UI'da dependency injection). İş kuralı doğrulamaları (ör. aktif kiralaması olan müşteri/ekipman silinemez, ekipman kodu benzersiz). Ortak bir temel exception'dan türeyen özel exception hiyerarşisi (ör. IsKuraliException → KayitBulunamadiException, DogrulamaException).
+## 2. Business CRUD + test projesi — ✅ Tamamlandı
+Musteri, Ekipman ve Personel için servis sınıfları; servisler bağımlılıklarını constructor üzerinden alır (DI container 6. aşamada UI'da). İş kuralı doğrulamaları (ör. kiralama geçmişi olan müşteri/ekipman/personel silinemez, ekipman kodu benzersiz). Ortak bir temel exception'dan türeyen özel exception hiyerarşisi. xUnit test projesi (SQLite in-memory) bu aşamaya çekildi; servis kuralları test edilir.
+
+**Not (30.09.2026):** `ICrudServisi<T>` + soyut `CrudServisiTemel<T>` (Template Method): ortak akış sabit, alt servisler `EklemeOncesiKontrol` / `GuncellemeOncesiKontrol` / `SilmeOncesiKontrol` kancalarını override eder. Exception'lar: `IsKuraliException` (soyut) → `DogrulamaException`, `KayitBulunamadiException`, `BenzersizlikIhlaliException`, `IliskiliKayitVarException`, `IslemYapilamazException`. Beklenmeyen veritabanı hataları sarmalanmaz (10. aşama). Kural ihlaliyle reddedilen `Guncelle`, nesneyi `IRepository.Reload` ile veritabanındaki haline döndürür; paylaşılan DbContext'te geçersiz değişiklik sonraki bir `SaveChanges` ile yazılamaz. Telefon `05XXXXXXXXX` biçimine normalize edilir. Ekipman Kirada durumuna elle alınamaz / Kirada'dan elle çıkarılamaz. Şifre en az 8 karakter; genel `Guncelle` şifre hash'ini değiştiremez; en az bir aktif Admin kalır. Testler bellekte SQLite kullanır; şema `CreateTables` ile oluşturulduğu için örnek veri yüklenmez. 62 test başarılı.
 
 ## 3. Kiralama akışı
-Müsaitlik kontrolü (zaman aralığı çakışması + ekipman durumu), kiralama başlatma, iade (polimorfik UcretHesapla ile ücret, gecikme, hasar bedeli, ekipman durumunun geri alınması), ödeme kaydı. xUnit test projesi: ücret hesapları ve çakışma senaryoları.
+Müsaitlik kontrolü (zaman aralığı çakışması + ekipman durumu), kiralama başlatma, iade (polimorfik UcretHesapla ile ücret, gecikme, hasar bedeli, ekipman durumunun geri alınması), ödeme kaydı, depozito takibi. Mevcut test projesine ücret hesabı, çakışma ve kiralama/iade senaryolarının testleri eklenir.
 
 ## 4. Giriş ve raporlama
 PBKDF2 ile şifre doğrulama, oturumdaki personel bilgisi, rol bazlı yetki (Admin personel ve fiyat yönetebilir). Dashboard için rapor sorguları (günlük/aylık gelir, en çok kiralanan ekipman, doluluk oranı) DTO'lar ile.
