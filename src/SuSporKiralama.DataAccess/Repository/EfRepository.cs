@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using SuSporKiralama.Entities.Soyut;
 
@@ -18,7 +18,11 @@ public class EfRepository<T>(SuSporKiralamaDbContext context) : IRepository<T> w
 
     public T? GetById(int id) => Set.Find(id);
 
-    public List<T> Find(Expression<Func<T, bool>> kosul) => Set.Where(kosul).ToList();
+    // Her ilişki yolu için Include eklenir (EF Core noktalı yolları, ör. "Detaylar.Ekipman", destekler).
+    public List<T> Find(Expression<Func<T, bool>> kosul, params string[] iliskiler) =>
+        iliskiler.Aggregate(Set.AsQueryable(), (sorgu, yol) => sorgu.Include(yol))
+            .Where(kosul)
+            .ToList();
 
     public void Add(T entity) => Set.Add(entity);
 

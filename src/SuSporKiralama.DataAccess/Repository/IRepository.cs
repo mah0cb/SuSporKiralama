@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using SuSporKiralama.Entities.Soyut;
 
 namespace SuSporKiralama.DataAccess.Repository;
@@ -13,8 +13,11 @@ public interface IRepository<T> where T : BaseEntity
     List<T> GetAll();
     T? GetById(int id);
 
-    /// <summary>Koşula uyan kayıtlar, ör. Find(m => m.Telefon == "555...").</summary>
-    List<T> Find(Expression<Func<T, bool>> kosul);
+    /// <summary>
+    /// Koşula uyan kayıtlar, ör. Find(m => m.Telefon == "555...").
+    /// İlişkili veriler yol olarak verilebilir: Find(k => k.Id == id, "Detaylar.Ekipman").
+    /// </summary>
+    List<T> Find(Expression<Func<T, bool>> kosul, params string[] iliskiler);
 
     void Add(T entity);
     void Update(T entity);
