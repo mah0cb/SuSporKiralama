@@ -77,7 +77,7 @@ public abstract class Ekipman : BaseEntity
     protected static void GirdileriDogrula(TimeSpan sure, decimal birimUcret)
     {
         if (sure < TimeSpan.Zero)
-            throw new ArgumentException("Kiralama süresi negatif olamaz.", nameof(sure));
+            throw new ArgumentException("Kiralama süresi negatif olamaz.");
         Dogrula.NegatifOlamaz(birimUcret, nameof(birimUcret));
     }
 }

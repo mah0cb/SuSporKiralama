@@ -6,13 +6,8 @@ public class DogrulamaException : IsKuraliException
     public DogrulamaException(string mesaj) : base(mesaj) { }
 
     /// <summary>
-    /// Entity'lerin fırlattığı ArgumentException'ı sarar. Orijinal hata InnerException'da korunur;
-    /// .NET'in mesaja eklediği " (Parameter 'x')" eki kullanıcıya gösterilmesin diye çıkarılır.
+    /// Entity'lerin fırlattığı ArgumentException'ı sarar; orijinal hata InnerException'da korunur.
+    /// Entity'ler parametre adı vermediği için mesaj kullanıcıya olduğu gibi gösterilebilir.
     /// </summary>
-    public DogrulamaException(ArgumentException icHata) : base(TemizMesaj(icHata), icHata) { }
-
-    private static string TemizMesaj(ArgumentException hata) =>
-        hata.ParamName is null
-            ? hata.Message
-            : hata.Message.Replace($" (Parameter '{hata.ParamName}')", "");
+    public DogrulamaException(ArgumentException icHata) : base(icHata.Message, icHata) { }
 }

@@ -33,7 +33,7 @@ public class Kiralama : BaseEntity
         set
         {
             if (value <= BaslangicZamani)
-                throw new ArgumentException("Planlanan bitiş zamanı başlangıç zamanından sonra olmalıdır.", nameof(PlanlananBitisZamani));
+                throw new ArgumentException("Planlanan bitiş zamanı başlangıç zamanından sonra olmalıdır.");
             _planlananBitisZamani = value;
         }
     }

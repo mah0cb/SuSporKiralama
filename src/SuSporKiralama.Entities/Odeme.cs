@@ -25,7 +25,7 @@ public class Odeme : BaseEntity
         set
         {
             if (value <= 0)
-                throw new ArgumentException("Ödeme tutarı sıfırdan büyük olmalıdır.", nameof(Tutar));
+                throw new ArgumentException("Ödeme tutarı sıfırdan büyük olmalıdır.");
             _tutar = value;
         }
     }

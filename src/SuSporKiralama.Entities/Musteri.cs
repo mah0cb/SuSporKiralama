@@ -47,7 +47,7 @@ public class Musteri : BaseEntity
         {
             if (string.IsNullOrWhiteSpace(value)) { _eposta = null; return; }
             if (!MailAddress.TryCreate(value.Trim(), out _))
-                throw new ArgumentException("Geçerli bir e-posta adresi giriniz.", nameof(Eposta));
+                throw new ArgumentException("Geçerli bir e-posta adresi giriniz.");
             _eposta = value.Trim();
         }
     }
