@@ -61,6 +61,8 @@ public abstract class Ekipman : BaseEntity
         set => _depozitoTutari = Dogrula.NegatifOlamaz(value, nameof(DepozitoTutari));
     }
 
+    public ICollection<KiralamaDetay> KiralamaDetaylari { get; set; } = new List<KiralamaDetay>();
+
     /// <summary>Güncel BirimUcret ile ücret hesaplar (kısayol).</summary>
     public decimal UcretHesapla(TimeSpan sure) => UcretHesapla(sure, BirimUcret);
 
