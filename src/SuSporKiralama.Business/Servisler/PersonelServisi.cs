@@ -46,6 +46,10 @@ public class PersonelServisi(IRepository<Personel> repository, IRepository<Kiral
 
     protected override void EklemeOncesiKontrol(Personel entity)
     {
+        // Genel Ekle(Personel) yolunda düz şifre verilirse veritabanına düz metin yazılmasın.
+        if (!SifreHasher.GecerliHashMi(entity.SifreHash))
+            throw new DogrulamaException("Şifre hash'lenmemiş; Ekle(adSoyad, kullaniciAdi, sifre, rol) metodunu kullanın.");
+
         var id = entity.Id;
         var kullaniciAdi = entity.KullaniciAdi;
         if (Repository.Find(p => p.KullaniciAdi == kullaniciAdi && p.Id != id).Count > 0)

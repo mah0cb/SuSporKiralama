@@ -65,6 +65,16 @@ public class PersonelServisiTestleri : IDisposable
     }
 
     [Fact]
+    public void Ekle_GenelYoldaHashlenmemisSifre_DogrulamaException()
+    {
+        var personel = new Personel("Deniz Kaya", "deniz", "duz-sifre-123", Rol.Personel);
+
+        var hata = Assert.Throws<DogrulamaException>(() => _servis.Ekle(personel));
+        Assert.Contains("hash'lenmemiş", hata.Message);
+        Assert.Empty(_servis.TumunuGetir());
+    }
+
+    [Fact]
     public void SifreDegistir_YeniHashKaydedilir()
     {
         var personel = PersonelEkle();
