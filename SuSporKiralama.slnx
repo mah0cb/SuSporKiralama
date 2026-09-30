@@ -4,4 +4,7 @@
     <Project Path="src/SuSporKiralama.DataAccess/SuSporKiralama.DataAccess.csproj" />
     <Project Path="src/SuSporKiralama.Entities/SuSporKiralama.Entities.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SuSporKiralama.Tests/SuSporKiralama.Tests.csproj" />
+  </Folder>
 </Solution>
