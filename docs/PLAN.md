@@ -7,7 +7,7 @@ Proje dönem boyunca 10 aşamada geliştirilir. Her aşama bitince burada "tamam
 | 1 | İskelet + veritabanı | ✅ Tamamlandı |
 | 2 | Business CRUD + test projesi | ✅ Tamamlandı |
 | 3 | Kiralama akışı + ücret/kiralama testleri | ✅ Tamamlandı |
-| 4 | Giriş ve raporlama | Bekliyor |
+| 4 | Giriş ve raporlama | ✅ Tamamlandı |
 | 5 | Yapay zeka servisi | Bekliyor |
 | 6 | DevExpress kurulumu | Bekliyor |
 | 7 | CRUD formları | Bekliyor |
@@ -32,8 +32,23 @@ Müsaitlik kontrolü (zaman aralığı çakışması + ekipman durumu), kiralama
 
 **Not (30.09.2026):** Durum makinesi `Kiralama` entity'sinde: Rezerve →`TeslimEt`→ Aktif →`Tamamla`→ Tamamlandi, Rezerve →`IptalEt`→ IptalEdildi; `Durum` ve ücret/zaman alanları private set, geçersiz geçişte `InvalidOperationException` (servis `IslemYapilamazException`'a çevirir). `IMusaitlikServisi` ayrı servis (5. aşamadaki yapay zeka önerisi kullanacak): yarı açık [başlangıç, bitiş) çakışması Rezerve/Aktif kiralamalara karşı; iade edilmemiş gecikmiş kiralamada ekipman şimdiye kadar dolu sayılır; Bakımda/Hizmet Dışı hiç müsait değil. `KiralamaServisi` `CrudServisiTemel`'den türemez (genel Sil/Guncelle yok); her işlem önce tüm kontroller, sonra tek `SaveChanges`. Servisler "şimdi"yi `TimeProvider`'dan alır, testlerde `FakeTimeProvider`. Depozito teslimde ekipmanların o anki depozito toplamı olarak alınır; iadede hasar önce depozitodan mahsup edilir (`Kiralama.DepozitoMahsupHesapla`), aşan kısım borca eklenir; `KalanBorc = ToplamUcret - mahsup - ödemeler`. Ödeme yalnızca tamamlanmış kiralamaya ve kalan borcu aşmadan alınır. Migration `KiralamaDepozitoTakibi` (DepozitoTutari, DepozitoDurumu, DepozitoMahsupTutari); mevcut tamamlanmış kayıtlarda depozito iade edilmiş sayılır. Ayrıca 2. aşamadan kalan iki düzeltme: genel `Ekle(Personel)` hash'lenmemiş şifreyi reddeder; `ArgumentException` parametre adsız fırlatılır. 153 test başarılı.
 
-## 4. Giriş ve raporlama
+## 4. Giriş ve raporlama — ✅ Tamamlandı
 PBKDF2 ile şifre doğrulama, oturumdaki personel bilgisi, rol bazlı yetki (Admin personel ve fiyat yönetebilir). Dashboard için rapor sorguları (günlük/aylık gelir, en çok kiralanan ekipman, doluluk oranı) DTO'lar ile.
+
+**Not (01.10.2026):** Ön kontrolde `IadeAl`'daki `Tamamla` ve `KiralamaBaslat`'taki `TeslimEt` çağrılarının sarılmadığı görüldü; saat geri alınınca (yaz saati) çıplak `InvalidOperationException` kaçıyordu, düzeltildi. `SifreHasher.Dogrula` sabit süreli karşılaştırma yapar. `GirisServisi`: hatalı kullanıcı adı ve şifre aynı mesajı alır (olmayan kullanıcıda da sahte hash doğrulanır), pasif hesap ayrı mesaj alır (yalnızca şifre doğruysa), aynı kullanıcı adıyla art arda 5 hatada 5 dakika kilit (sayaç bellekte, zaman `TimeProvider` UTC). `Oturum` uygulama boyunca tek; `Ac`/`Kapat` internal olduğu için oturum yalnızca giriş servisiyle açılır. Yetki matrisi yalnızca `YetkiServisi`'nde (`Dictionary<Rol, HashSet<Islem>>`):
+
+| Islem | Admin | Personel |
+|---|:-:|:-:|
+| PersonelYonetimi | ✅ | ❌ |
+| MusteriIslemleri | ✅ | ✅ |
+| EkipmanYonetimi (ekle, sil, genel güncelle) | ✅ | ❌ |
+| FiyatGuncelleme | ✅ | ❌ |
+| EkipmanDurumDegistirme | ✅ | ✅ |
+| KiralamaIslemleri | ✅ | ✅ |
+| OdemeAlma | ✅ | ✅ |
+| RaporGoruntuleme (dashboard dahil) | ✅ | ❌ |
+
+`CrudServisiTemel` Ekle/Guncelle/Sil'de servisin `YonetimIslemi` yetkisini kontrol eder; kendi yetkisi olan özel işlemler yetkisiz iç akış `GuncellemeAkisi`'nı kullanır. Okuma metotları yetkiye tabi değil. `RezervasyonOlustur`/`KiralamaBaslat` artık `personelId` almaz, personel oturumdan gelir. Raporlar `IRepository.Query()` (AsNoTracking) ile veritabanında çalışır; gelir = ödeme tarihine göre `Odemeler`. En çok kiralananlarda süre ve doluluk oranında çalışma saati kesişimi bellekte hesaplanır (tarih farkı SQLite'ta çevrilemiyor). Çalışma saatleri `IsletmeAyarlari` ile verilir (varsayılan 09:00–19:00). Sorguların SQL Server'da da SQL'e çevrildiği LocalDB'de doğrulandı. 216 test başarılı.
 
 ## 5. Yapay zeka servisi
 IAiOneriServisi arayüzü; Claude API'yi HttpClient ile çağıran gerçek implementasyon (API anahtarı repoya girmez) ve internet yokken çalışan sahte implementasyon. Senaryo: müşterinin serbest metin tarifi + müsait ekipman listesi → önerilen ekipman paketi (JSON yanıt).
