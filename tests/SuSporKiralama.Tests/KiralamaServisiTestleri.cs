@@ -148,6 +148,23 @@ public class KiralamaServisiTestleri : IDisposable
     }
 
     [Fact]
+    public void IadeAl_SaatGeriAlinmis_IslemYapilamazHicbirSeyDegismez()
+    {
+        var kiralama = Kapidan(Saat(12));
+        var detayId = kiralama.Detaylar.Single().Id;
+
+        // Yerel saat 1 saat geri gider (yaz saati bitişi gibi): şimdi teslim anından öncedir.
+        _zaman.SetLocalTimeZone(TimeZoneInfo.CreateCustomTimeZone("Eksi1", TimeSpan.FromHours(-1), "Eksi1", "Eksi1"));
+
+        Assert.Throws<IslemYapilamazException>(() =>
+            _servis.IadeAl(kiralama.Id, [new HasarBilgisi(detayId, "Çizik", 100m)]));
+
+        Assert.Equal(KiralamaDurumu.Aktif, kiralama.Durum);
+        Assert.Empty(kiralama.Detaylar.Single().HasarKayitlari);
+        DegisiklikKalmamali();
+    }
+
+    [Fact]
     public void OlmayanKiralama_KayitBulunamadi()
     {
         Assert.Throws<KayitBulunamadiException>(() => _servis.TeslimEt(999));

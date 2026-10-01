@@ -55,7 +55,7 @@ public class KiralamaServisi(
     {
         var simdi = Simdi;
         var kiralama = YeniKiralama(musteriId, personelId, ekipmanIdleri, simdi, planlananBitis);
-        kiralama.TeslimEt(simdi); // kapıdan kiralama = oluştur + hemen teslim et
+        KuralIle(() => kiralama.TeslimEt(simdi)); // kapıdan kiralama = oluştur + hemen teslim et
 
         kiralamaRepository.Add(kiralama);
         kiralamaRepository.SaveChanges();
@@ -99,9 +99,14 @@ public class KiralamaServisi(
             eklenecekler.Add((detay, hasar));
         }
 
+        // Saat geri alınmışsa (ör. yaz saati bitişi) iade anı teslimden önce görünebilir; Tamamla bunu
+        // reddederdi ama o noktada hasarlar eklenmiş olurdu. Bu yüzden burada, önceden kontrol edilir.
+        if (simdi < kiralama.BaslangicZamani)
+            throw new IslemYapilamazException("İade zamanı teslim zamanından önce olamaz; bilgisayarın saatini kontrol edin.");
+
         foreach (var (detay, hasar) in eklenecekler)
             detay.HasarKayitlari.Add(hasar);
-        kiralama.Tamamla(simdi); // ücret, depozito mahsubu ve ekipman durumları
+        KuralIle(() => kiralama.Tamamla(simdi)); // ücret, depozito mahsubu ve ekipman durumları
 
         kiralamaRepository.SaveChanges();
     }
