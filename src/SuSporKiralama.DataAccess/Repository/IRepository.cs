@@ -19,6 +19,12 @@ public interface IRepository<T> where T : BaseEntity
     /// </summary>
     List<T> Find(Expression<Func<T, bool>> kosul, params string[] iliskiler);
 
+    /// <summary>
+    /// Salt okunur (takip edilmeyen) sorgu. Gruplama, toplam ve sayım gibi rapor sorgularının
+    /// tamamı veritabanında (SQL olarak) çalışsın diye; sonuç nesneleri değiştirilip kaydedilmez.
+    /// </summary>
+    IQueryable<T> Query();
+
     void Add(T entity);
     void Update(T entity);
     void Delete(T entity);

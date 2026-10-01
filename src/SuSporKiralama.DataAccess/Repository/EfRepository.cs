@@ -24,6 +24,8 @@ public class EfRepository<T>(SuSporKiralamaDbContext context) : IRepository<T> w
             .Where(kosul)
             .ToList();
 
+    public IQueryable<T> Query() => Set.AsNoTracking();
+
     public void Add(T entity) => Set.Add(entity);
 
     public void Update(T entity) => Set.Update(entity);
