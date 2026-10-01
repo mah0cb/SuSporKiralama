@@ -1,3 +1,4 @@
+using SuSporKiralama.Business.Guvenlik;
 using SuSporKiralama.Business.Istisnalar;
 using SuSporKiralama.Business.Servisler.Soyut;
 using SuSporKiralama.DataAccess.Guvenlik;
@@ -6,15 +7,17 @@ using SuSporKiralama.Entities;
 
 namespace SuSporKiralama.Business.Servisler;
 
-public class PersonelServisi(IRepository<Personel> repository, IRepository<Kiralama> kiralamaRepository)
-    : CrudServisiTemel<Personel>(repository), IPersonelServisi
+public class PersonelServisi(IRepository<Personel> repository, IRepository<Kiralama> kiralamaRepository, IYetkiServisi yetki)
+    : CrudServisiTemel<Personel>(repository, yetki), IPersonelServisi
 {
     public const int MinSifreUzunlugu = 8;
 
     protected override string EntityAdi => "Personel";
+    protected override Islem YonetimIslemi => Islem.PersonelYonetimi;
 
     public Personel Ekle(string adSoyad, string kullaniciAdi, string sifre, Rol rol)
     {
+        Yetki.YetkiKontrol(YonetimIslemi); // yetkisiz kullanıcı şifre kuralı hatası bile görmesin
         SifreKontrol(sifre);
 
         Personel personel = null!;
@@ -26,6 +29,7 @@ public class PersonelServisi(IRepository<Personel> repository, IRepository<Kiral
 
     public void SifreDegistir(int id, string yeniSifre)
     {
+        Yetki.YetkiKontrol(YonetimIslemi);
         SifreKontrol(yeniSifre);
         var personel = IdIleGetir(id);
 
@@ -39,9 +43,10 @@ public class PersonelServisi(IRepository<Personel> repository, IRepository<Kiral
 
     public void AktiflikDegistir(int id, bool aktif)
     {
+        Yetki.YetkiKontrol(YonetimIslemi);
         var personel = IdIleGetir(id);
         personel.AktifMi = aktif;
-        Guncelle(personel); // son aktif admin kuralı GuncellemeOncesiKontrol'de
+        GuncellemeAkisi(personel); // son aktif admin kuralı GuncellemeOncesiKontrol'de
     }
 
     protected override void EklemeOncesiKontrol(Personel entity)

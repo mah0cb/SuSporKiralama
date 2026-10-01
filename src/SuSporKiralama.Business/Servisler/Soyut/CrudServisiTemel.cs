@@ -1,3 +1,4 @@
+using SuSporKiralama.Business.Guvenlik;
 using SuSporKiralama.Business.Istisnalar;
 using SuSporKiralama.DataAccess.Repository;
 using SuSporKiralama.Entities.Soyut;
@@ -9,14 +10,19 @@ namespace SuSporKiralama.Business.Servisler.Soyut;
 /// Ekle/Guncelle/Sil'in adımları burada sabittir; alt servisler yalnızca "kanca" (hook)
 /// metotlarını override ederek kendi iş kurallarını araya ekler.
 /// </summary>
-public abstract class CrudServisiTemel<T>(IRepository<T> repository) : ICrudServisi<T> where T : BaseEntity
+public abstract class CrudServisiTemel<T>(IRepository<T> repository, IYetkiServisi yetki) : ICrudServisi<T> where T : BaseEntity
 {
     // Alt servisler kendi sorguları için kullanabilsin diye protected.
     protected readonly IRepository<T> Repository = repository;
+    protected readonly IYetkiServisi Yetki = yetki;
 
     // Hata mesajlarında kullanılan kullanıcı dostu ad (ör. "Müşteri").
     // abstract: her servisin kendi adını vermesi zorunludur, makul bir varsayılan yoktur.
     protected abstract string EntityAdi { get; }
+
+    // Ekle/Guncelle/Sil için gereken yetki. abstract: unutulursa derleme hatası olsun.
+    // Okuma metotları (TumunuGetir, IdIleGetir) yetki kontrolüne girmez.
+    protected abstract Islem YonetimIslemi { get; }
 
     // Aşağıdaki public metotlar bilerek virtual DEĞİL: akış (kontrol → kaydet) sabittir,
     // alt sınıflar bu sırayı bozamaz; sadece kancaları değiştirebilir.
@@ -28,12 +34,33 @@ public abstract class CrudServisiTemel<T>(IRepository<T> repository) : ICrudServ
 
     public void Ekle(T entity)
     {
+        Yetki.YetkiKontrol(YonetimIslemi);
         DogrulamaIle(() => EklemeOncesiKontrol(entity));
         Repository.Add(entity);
         Repository.SaveChanges();
     }
 
     public void Guncelle(T entity)
+    {
+        Yetki.YetkiKontrol(YonetimIslemi);
+        GuncellemeAkisi(entity);
+    }
+
+    public void Sil(int id)
+    {
+        Yetki.YetkiKontrol(YonetimIslemi);
+        var entity = IdIleGetir(id);
+        SilmeOncesiKontrol(entity);
+        Repository.Delete(entity);
+        Repository.SaveChanges();
+    }
+
+    /// <summary>
+    /// Guncelle'nin yetki kontrolü olmayan akışı. Kendi yetkisini ayrıca kontrol eden özel işlemler
+    /// (ör. Personel rolünün de yapabildiği ekipman durum değişikliği) bunu çağırır; genel
+    /// Guncelle'yi çağırsalar YonetimIslemi yetkisine takılırlardı.
+    /// </summary>
+    protected void GuncellemeAkisi(T entity)
     {
         IdIleGetir(entity.Id);
         try
@@ -47,14 +74,6 @@ public abstract class CrudServisiTemel<T>(IRepository<T> repository) : ICrudServ
             throw;
         }
         Repository.Update(entity);
-        Repository.SaveChanges();
-    }
-
-    public void Sil(int id)
-    {
-        var entity = IdIleGetir(id);
-        SilmeOncesiKontrol(entity);
-        Repository.Delete(entity);
         Repository.SaveChanges();
     }
 

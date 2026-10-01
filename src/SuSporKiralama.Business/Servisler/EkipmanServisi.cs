@@ -1,3 +1,4 @@
+using SuSporKiralama.Business.Guvenlik;
 using SuSporKiralama.Business.Istisnalar;
 using SuSporKiralama.Business.Servisler.Soyut;
 using SuSporKiralama.DataAccess.Repository;
@@ -6,10 +7,13 @@ using SuSporKiralama.Entities.Soyut;
 
 namespace SuSporKiralama.Business.Servisler;
 
-public class EkipmanServisi(IRepository<Ekipman> repository, IRepository<KiralamaDetay> kiralamaDetayRepository)
-    : CrudServisiTemel<Ekipman>(repository), IEkipmanServisi
+public class EkipmanServisi(IRepository<Ekipman> repository, IRepository<KiralamaDetay> kiralamaDetayRepository, IYetkiServisi yetki)
+    : CrudServisiTemel<Ekipman>(repository, yetki), IEkipmanServisi
 {
     protected override string EntityAdi => "Ekipman";
+
+    // Genel Guncelle fiyatı da değiştirebildiği için ekleme/silme ile aynı (Admin) yetkiyi ister.
+    protected override Islem YonetimIslemi => Islem.EkipmanYonetimi;
 
     // Ekleme ve güncelleme aynı kuralları kullanır (GuncellemeOncesiKontrol varsayılan olarak bunu çağırır).
     protected override void EklemeOncesiKontrol(Ekipman entity)
@@ -52,15 +56,17 @@ public class EkipmanServisi(IRepository<Ekipman> repository, IRepository<Kiralam
 
     public void FiyatGuncelle(int id, decimal yeniBirimUcret)
     {
+        Yetki.YetkiKontrol(Islem.FiyatGuncelleme);
         var ekipman = IdIleGetir(id);
         DogrulamaIle(() => ekipman.BirimUcret = yeniBirimUcret);
-        Guncelle(ekipman); // sıfır fiyat burada reddedilir ve değişiklik geri alınır
+        GuncellemeAkisi(ekipman); // sıfır fiyat burada reddedilir ve değişiklik geri alınır
     }
 
     public void DurumDegistir(int id, EkipmanDurumu yeniDurum)
     {
+        Yetki.YetkiKontrol(Islem.EkipmanDurumDegistirme);
         var ekipman = IdIleGetir(id);
         ekipman.Durum = yeniDurum;
-        Guncelle(ekipman); // Kirada kuralı EklemeOncesiKontrol'de
+        GuncellemeAkisi(ekipman); // Kirada kuralı EklemeOncesiKontrol'de
     }
 }

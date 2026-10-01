@@ -1,3 +1,4 @@
+using SuSporKiralama.Business.Guvenlik;
 using SuSporKiralama.Business.Istisnalar;
 using SuSporKiralama.Business.Servisler;
 using SuSporKiralama.Entities;
@@ -11,10 +12,20 @@ public class MusteriServisiTestleri : IDisposable
 
     public MusteriServisiTestleri()
     {
-        _servis = new MusteriServisi(_db.Repo<Musteri>(), _db.Repo<Kiralama>());
+        // Müşteri işlemleri Personel rolüne de açık; testler bu yetkiyle çalışır.
+        _servis = new MusteriServisi(_db.Repo<Musteri>(), _db.Repo<Kiralama>(), TestOturumu.PersonelOlarakGiris().Yetki());
     }
 
     public void Dispose() => _db.Dispose();
+
+    [Fact]
+    public void OturumYok_EklemeYetkisiz()
+    {
+        var servis = new MusteriServisi(_db.Repo<Musteri>(), _db.Repo<Kiralama>(), new Oturum().Yetki());
+
+        Assert.Throws<YetkisizIslemException>(() => servis.Ekle(YeniMusteri("05321112233")));
+        Assert.Empty(_db.Context.Musteriler);
+    }
 
     private static Musteri YeniMusteri(string telefon, string ad = "Ayşe", string soyad = "Yılmaz") =>
         new(ad, soyad, telefon, DeneyimSeviyesi.Baslangic);

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using SuSporKiralama.Business.Guvenlik;
 using SuSporKiralama.Business.Istisnalar;
 using SuSporKiralama.Business.Servisler.Soyut;
 using SuSporKiralama.DataAccess.Repository;
@@ -7,8 +8,8 @@ using SuSporKiralama.Entities;
 
 namespace SuSporKiralama.Business.Servisler;
 
-public class MusteriServisi(IRepository<Musteri> repository, IRepository<Kiralama> kiralamaRepository)
-    : CrudServisiTemel<Musteri>(repository), IMusteriServisi
+public class MusteriServisi(IRepository<Musteri> repository, IRepository<Kiralama> kiralamaRepository, IYetkiServisi yetki)
+    : CrudServisiTemel<Musteri>(repository, yetki), IMusteriServisi
 {
     // Türkiye cep telefonu, normalize edilmiş hali: 05XXXXXXXXX (11 hane).
     private static readonly Regex TelefonBicimi = new("^05[0-9]{9}$");
@@ -20,6 +21,7 @@ public class MusteriServisi(IRepository<Musteri> repository, IRepository<Kiralam
     private static readonly CompareInfo TurkceKarsilastirma = CultureInfo.GetCultureInfo("tr-TR").CompareInfo;
 
     protected override string EntityAdi => "Müşteri";
+    protected override Islem YonetimIslemi => Islem.MusteriIslemleri;
 
     // Ekleme ve güncelleme aynı kuralları kullanır (GuncellemeOncesiKontrol varsayılan olarak bunu çağırır).
     protected override void EklemeOncesiKontrol(Musteri entity)

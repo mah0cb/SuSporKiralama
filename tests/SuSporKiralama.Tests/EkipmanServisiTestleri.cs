@@ -12,7 +12,7 @@ public class EkipmanServisiTestleri : IDisposable
 
     public EkipmanServisiTestleri()
     {
-        _servis = new EkipmanServisi(_db.Repo<Ekipman>(), _db.Repo<KiralamaDetay>());
+        _servis = new EkipmanServisi(_db.Repo<Ekipman>(), _db.Repo<KiralamaDetay>(), TestOturumu.AdminOlarakGiris().Yetki());
     }
 
     public void Dispose() => _db.Dispose();
@@ -216,5 +216,35 @@ public class EkipmanServisiTestleri : IDisposable
 
         var hata = Assert.Throws<IliskiliKayitVarException>(() => _servis.Sil(sup.Id));
         Assert.Contains("Hizmet Dışı", hata.Message);
+    }
+
+    // --- Yetki ---
+
+    private EkipmanServisi PersonelServisi() =>
+        new(_db.Repo<Ekipman>(), _db.Repo<KiralamaDetay>(), TestOturumu.PersonelOlarakGiris().Yetki());
+
+    [Fact]
+    public void Personel_EkleSilGuncelleFiyat_Yetkisiz()
+    {
+        var sup = _db.SupEkle();
+        var servis = PersonelServisi();
+
+        Assert.Throws<YetkisizIslemException>(() => servis.Ekle(YeniSup("SUP-002")));
+        Assert.Throws<YetkisizIslemException>(() => servis.Sil(sup.Id));
+        Assert.Throws<YetkisizIslemException>(() => servis.Guncelle(sup));
+        Assert.Throws<YetkisizIslemException>(() => servis.FiyatGuncelle(sup.Id, 999m));
+
+        Assert.Single(_db.Context.Ekipmanlar);
+        Assert.Equal(150m, _servis.IdIleGetir(sup.Id).BirimUcret);
+    }
+
+    [Fact]
+    public void Personel_DurumDegistirebilir()
+    {
+        var sup = _db.SupEkle();
+
+        PersonelServisi().DurumDegistir(sup.Id, EkipmanDurumu.Bakimda);
+
+        Assert.Equal(EkipmanDurumu.Bakimda, _servis.IdIleGetir(sup.Id).Durum);
     }
 }

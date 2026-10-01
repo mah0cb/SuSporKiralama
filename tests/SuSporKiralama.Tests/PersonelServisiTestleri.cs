@@ -13,7 +13,8 @@ public class PersonelServisiTestleri : IDisposable
 
     public PersonelServisiTestleri()
     {
-        _servis = new PersonelServisi(_db.Repo<Personel>(), _db.Repo<Kiralama>());
+        // Oturumdaki yönetici veritabanına kaydedilmez; "son aktif admin" testlerini etkilemez.
+        _servis = new PersonelServisi(_db.Repo<Personel>(), _db.Repo<Kiralama>(), TestOturumu.AdminOlarakGiris().Yetki());
     }
 
     public void Dispose() => _db.Dispose();
@@ -220,5 +221,22 @@ public class PersonelServisiTestleri : IDisposable
 
         var hata = Assert.Throws<IliskiliKayitVarException>(() => _servis.Sil(personel.Id));
         Assert.Contains("pasif", hata.Message);
+    }
+
+    // --- Yetki ---
+
+    [Fact]
+    public void PersonelRolu_PersonelYonetimiYapamaz()
+    {
+        var deniz = PersonelEkle();
+        var servis = new PersonelServisi(_db.Repo<Personel>(), _db.Repo<Kiralama>(), TestOturumu.PersonelOlarakGiris().Yetki());
+
+        Assert.Throws<YetkisizIslemException>(() => servis.Ekle("Ali Veli", "ali", GecerliSifre, Rol.Admin));
+        Assert.Throws<YetkisizIslemException>(() => servis.SifreDegistir(deniz.Id, "YeniSifre123"));
+        Assert.Throws<YetkisizIslemException>(() => servis.AktiflikDegistir(deniz.Id, false));
+        Assert.Throws<YetkisizIslemException>(() => servis.Sil(deniz.Id));
+
+        Assert.Single(_servis.TumunuGetir());
+        Assert.True(_servis.IdIleGetir(deniz.Id).AktifMi);
     }
 }
