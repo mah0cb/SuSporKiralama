@@ -11,4 +11,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <!-- Testler oturumu şifresiz açabilsin diye (Oturum.Ac internal). -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="SuSporKiralama.Tests" />
+  </ItemGroup>
+
 </Project>
