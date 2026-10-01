@@ -1,3 +1,4 @@
+using SuSporKiralama.Business.Guvenlik;
 using SuSporKiralama.Business.Istisnalar;
 using SuSporKiralama.DataAccess.Repository;
 using SuSporKiralama.Entities;
@@ -13,6 +14,8 @@ namespace SuSporKiralama.Business.Servisler;
 ///
 /// Atomiklik: her metot önce tüm kontrolleri yapar, sonra nesneleri değiştirir ve tek bir
 /// SaveChanges çağırır. Böylece kural hatasında bellekte de veritabanında da değişiklik kalmaz.
+///
+/// Değiştiren her işlem önce yetkiyi kontrol eder; kiralamayı yapan personel oturumdan alınır.
 /// </summary>
 public class KiralamaServisi(
     IRepository<Kiralama> kiralamaRepository,
@@ -20,6 +23,8 @@ public class KiralamaServisi(
     IRepository<Personel> personelRepository,
     IRepository<Ekipman> ekipmanRepository,
     IMusaitlikServisi musaitlikServisi,
+    IOturum oturum,
+    IYetkiServisi yetki,
     TimeProvider zaman) : IKiralamaServisi
 {
     // Kiralama ile birlikte yüklenen ilişkiler (iade ve ödeme hesabı bunlara ihtiyaç duyar).
@@ -39,22 +44,24 @@ public class KiralamaServisi(
 
     // --- Oluşturma ---
 
-    public Kiralama RezervasyonOlustur(int musteriId, int personelId, IEnumerable<int> ekipmanIdleri,
+    public Kiralama RezervasyonOlustur(int musteriId, IEnumerable<int> ekipmanIdleri,
         DateTime baslangic, DateTime planlananBitis)
     {
+        yetki.YetkiKontrol(Islem.KiralamaIslemleri);
         if (baslangic <= Simdi)
             throw new DogrulamaException("Rezervasyonun başlangıç zamanı gelecekte olmalıdır.");
 
-        var kiralama = YeniKiralama(musteriId, personelId, ekipmanIdleri, baslangic, planlananBitis);
+        var kiralama = YeniKiralama(musteriId, ekipmanIdleri, baslangic, planlananBitis);
         kiralamaRepository.Add(kiralama);
         kiralamaRepository.SaveChanges();
         return kiralama;
     }
 
-    public Kiralama KiralamaBaslat(int musteriId, int personelId, IEnumerable<int> ekipmanIdleri, DateTime planlananBitis)
+    public Kiralama KiralamaBaslat(int musteriId, IEnumerable<int> ekipmanIdleri, DateTime planlananBitis)
     {
+        yetki.YetkiKontrol(Islem.KiralamaIslemleri);
         var simdi = Simdi;
-        var kiralama = YeniKiralama(musteriId, personelId, ekipmanIdleri, simdi, planlananBitis);
+        var kiralama = YeniKiralama(musteriId, ekipmanIdleri, simdi, planlananBitis);
         KuralIle(() => kiralama.TeslimEt(simdi)); // kapıdan kiralama = oluştur + hemen teslim et
 
         kiralamaRepository.Add(kiralama);
@@ -66,6 +73,7 @@ public class KiralamaServisi(
 
     public void TeslimEt(int kiralamaId)
     {
+        yetki.YetkiKontrol(Islem.KiralamaIslemleri);
         var kiralama = IdIleGetir(kiralamaId);
         var simdi = Simdi;
 
@@ -80,6 +88,7 @@ public class KiralamaServisi(
 
     public void IadeAl(int kiralamaId, IEnumerable<HasarBilgisi>? hasarlar = null)
     {
+        yetki.YetkiKontrol(Islem.KiralamaIslemleri);
         var kiralama = IdIleGetir(kiralamaId);
         var simdi = Simdi;
 
@@ -113,6 +122,7 @@ public class KiralamaServisi(
 
     public void IptalEt(int kiralamaId)
     {
+        yetki.YetkiKontrol(Islem.KiralamaIslemleri);
         var kiralama = IdIleGetir(kiralamaId);
         KuralIle(kiralama.IptalEt);
         kiralamaRepository.SaveChanges();
@@ -122,6 +132,7 @@ public class KiralamaServisi(
 
     public Odeme OdemeEkle(int kiralamaId, decimal tutar, OdemeTipi odemeTipi, string? aciklama = null)
     {
+        yetki.YetkiKontrol(Islem.OdemeAlma);
         var kiralama = IdIleGetir(kiralamaId);
 
         // Tutar iade anında kesinleşir; öncesinde fazla ödemenin sınırı belli olmaz.
@@ -173,7 +184,7 @@ public class KiralamaServisi(
     // --- Yardımcılar ---
 
     /// <summary>Tüm kontrollerden geçmiş, henüz context'e eklenmemiş Rezerve kiralama oluşturur.</summary>
-    private Kiralama YeniKiralama(int musteriId, int personelId, IEnumerable<int> ekipmanIdleri,
+    private Kiralama YeniKiralama(int musteriId, IEnumerable<int> ekipmanIdleri,
         DateTime baslangic, DateTime planlananBitis)
     {
         if (planlananBitis <= baslangic)
@@ -183,6 +194,8 @@ public class KiralamaServisi(
         if (!musteri.AktifMi)
             throw new IslemYapilamazException($"{musteri.AdSoyad} pasif bir müşteri olduğu için kiralama yapılamaz.");
 
+        // Oturum açıkken personel pasife alınmış veya silinmiş olabilir; kayıt yeniden kontrol edilir.
+        var personelId = oturum.PersonelId;
         var personel = personelRepository.GetById(personelId) ?? throw new KayitBulunamadiException("Personel", personelId);
         if (!personel.AktifMi)
             throw new IslemYapilamazException($"{personel.AdSoyad} pasif bir personel olduğu için kiralama yapamaz.");

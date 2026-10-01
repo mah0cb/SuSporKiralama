@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Time.Testing;
+using SuSporKiralama.Business.Guvenlik;
 using SuSporKiralama.Business.Istisnalar;
 using SuSporKiralama.Business.Servisler;
 using SuSporKiralama.Entities;
@@ -22,25 +23,31 @@ public class KiralamaServisiTestleri : IDisposable
 
     public KiralamaServisiTestleri()
     {
-        var musaitlik = new MusaitlikServisi(_db.Repo<Ekipman>(), _db.Repo<KiralamaDetay>(), _zaman);
-        _servis = new KiralamaServisi(_db.Repo<Kiralama>(), _db.Repo<Musteri>(), _db.Repo<Personel>(),
-            _db.Repo<Ekipman>(), musaitlik, _zaman);
-
         _musteri = _db.MusteriEkle();
         _personel = _db.PersonelEkle();
         _sup = _db.SupEkle();
         _yelek = _db.YelekEkle();
+
+        // Kiralamayı yapan personel oturumdan alınır; testler kayıtlı _personel ile oturum açar.
+        _servis = Servis(TestOturumu.PersonelOlarakGiris(_personel));
     }
 
     public void Dispose() => _db.Dispose();
 
+    private KiralamaServisi Servis(Oturum oturum)
+    {
+        var musaitlik = new MusaitlikServisi(_db.Repo<Ekipman>(), _db.Repo<KiralamaDetay>(), _zaman);
+        return new KiralamaServisi(_db.Repo<Kiralama>(), _db.Repo<Musteri>(), _db.Repo<Personel>(),
+            _db.Repo<Ekipman>(), musaitlik, oturum, oturum.Yetki(), _zaman);
+    }
+
     private void SaatiAyarla(DateTime an) => _zaman.SetUtcNow(new DateTimeOffset(an, TimeSpan.Zero));
 
     private Kiralama Rezervasyon(DateTime baslangic, DateTime bitis, params Ekipman[] ekipmanlar) =>
-        _servis.RezervasyonOlustur(_musteri.Id, _personel.Id, IdLer(ekipmanlar), baslangic, bitis);
+        _servis.RezervasyonOlustur(_musteri.Id, IdLer(ekipmanlar), baslangic, bitis);
 
     private Kiralama Kapidan(DateTime bitis, params Ekipman[] ekipmanlar) =>
-        _servis.KiralamaBaslat(_musteri.Id, _personel.Id, IdLer(ekipmanlar), bitis);
+        _servis.KiralamaBaslat(_musteri.Id, IdLer(ekipmanlar), bitis);
 
     private IEnumerable<int> IdLer(Ekipman[] ekipmanlar) =>
         (ekipmanlar.Length > 0 ? ekipmanlar : [_sup]).Select(e => e.Id);
@@ -210,14 +217,12 @@ public class KiralamaServisiTestleri : IDisposable
     }
 
     [Fact]
-    public void PasifPersonel_IslemYapilamaz()
+    public void OturumdakiPersonelSonradanPasif_IslemYapilamaz()
     {
-        var pasif = _db.PersonelEkle("pasif");
-        pasif.AktifMi = false;
+        _personel.AktifMi = false;
         _db.Context.SaveChanges();
 
-        Assert.Throws<IslemYapilamazException>(() =>
-            _servis.KiralamaBaslat(_musteri.Id, pasif.Id, [_sup.Id], Saat(12)));
+        Assert.Throws<IslemYapilamazException>(() => Kapidan(Saat(12)));
     }
 
     [Fact]
@@ -232,16 +237,56 @@ public class KiralamaServisiTestleri : IDisposable
     [Fact]
     public void OlmayanMusteriPersonelVeyaEkipman_KayitBulunamadi()
     {
-        Assert.Throws<KayitBulunamadiException>(() => _servis.KiralamaBaslat(999, _personel.Id, [_sup.Id], Saat(12)));
-        Assert.Throws<KayitBulunamadiException>(() => _servis.KiralamaBaslat(_musteri.Id, 999, [_sup.Id], Saat(12)));
-        Assert.Throws<KayitBulunamadiException>(() => _servis.KiralamaBaslat(_musteri.Id, _personel.Id, [999], Saat(12)));
+        // Oturumdaki personel veritabanında yok (kaydedilmemiş, Id = 0).
+        var kayitsizPersonelle = Servis(TestOturumu.PersonelOlarakGiris());
+
+        Assert.Throws<KayitBulunamadiException>(() => _servis.KiralamaBaslat(999, [_sup.Id], Saat(12)));
+        Assert.Throws<KayitBulunamadiException>(() => kayitsizPersonelle.KiralamaBaslat(_musteri.Id, [_sup.Id], Saat(12)));
+        Assert.Throws<KayitBulunamadiException>(() => _servis.KiralamaBaslat(_musteri.Id, [999], Saat(12)));
     }
 
     [Fact]
     public void BosVeyaTekrarliEkipmanListesi_DogrulamaException()
     {
-        Assert.Throws<DogrulamaException>(() => _servis.KiralamaBaslat(_musteri.Id, _personel.Id, [], Saat(12)));
-        Assert.Throws<DogrulamaException>(() => _servis.KiralamaBaslat(_musteri.Id, _personel.Id, [_sup.Id, _sup.Id], Saat(12)));
+        Assert.Throws<DogrulamaException>(() => _servis.KiralamaBaslat(_musteri.Id, [], Saat(12)));
+        Assert.Throws<DogrulamaException>(() => _servis.KiralamaBaslat(_musteri.Id, [_sup.Id, _sup.Id], Saat(12)));
+    }
+
+    // --- Oturum ve yetki ---
+
+    [Fact]
+    public void Kiralama_OturumdakiPersonelAdinaKaydedilir()
+    {
+        var admin = _db.PersonelEkle("admin", Rol.Admin);
+
+        var kiralama = Servis(TestOturumu.AdminOlarakGiris(admin)).KiralamaBaslat(_musteri.Id, [_sup.Id], Saat(12));
+
+        Assert.Equal(admin.Id, _db.Context.Kiralamalar.Single(k => k.Id == kiralama.Id).PersonelId);
+    }
+
+    [Fact]
+    public void OturumYok_KiralamaVeOdemeYetkisiz()
+    {
+        var kiralama = TamamlanmisKiralama();
+        var oturumsuz = Servis(new Oturum());
+
+        var hata = Assert.Throws<YetkisizIslemException>(() => oturumsuz.KiralamaBaslat(_musteri.Id, [_sup.Id], Saat(13)));
+        Assert.Contains("giriş", hata.Message);
+        Assert.Throws<YetkisizIslemException>(() => oturumsuz.RezervasyonOlustur(_musteri.Id, [_sup.Id], Saat(14), Saat(15)));
+        Assert.Throws<YetkisizIslemException>(() => oturumsuz.OdemeEkle(kiralama.Id, 10m, OdemeTipi.Nakit));
+
+        Assert.Single(_db.Context.Kiralamalar);
+        Assert.Empty(_db.Context.Odemeler);
+    }
+
+    [Fact]
+    public void PersonelRolu_OdemeAlabilir()
+    {
+        var kiralama = TamamlanmisKiralama();
+
+        _servis.OdemeEkle(kiralama.Id, 350m, OdemeTipi.Nakit);
+
+        Assert.Equal(0m, kiralama.KalanBorc);
     }
 
     [Fact]

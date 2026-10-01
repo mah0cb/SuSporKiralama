@@ -5,6 +5,8 @@ namespace SuSporKiralama.Business.Servisler;
 /// <summary>
 /// Kiralama yalnızca bu iş akışlarıyla değişir; genel Ekle/Guncelle/Sil yoktur.
 /// Her işlem tek SaveChanges ile kaydedilir; kural hatasında hiçbir değişiklik kalmaz.
+/// Değiştiren işlemler yetki ister (KiralamaIslemleri / OdemeAlma); kiralamayı yapan personel
+/// oturumdaki personeldir.
 /// </summary>
 public interface IKiralamaServisi
 {
@@ -12,11 +14,11 @@ public interface IKiralamaServisi
     Kiralama IdIleGetir(int id);
 
     /// <summary>İleri tarihli rezervasyon (Rezerve). Başlangıç gelecekte olmalı, ekipmanlar müsait olmalı.</summary>
-    Kiralama RezervasyonOlustur(int musteriId, int personelId, IEnumerable<int> ekipmanIdleri,
+    Kiralama RezervasyonOlustur(int musteriId, IEnumerable<int> ekipmanIdleri,
         DateTime baslangic, DateTime planlananBitis);
 
     /// <summary>Kapıdan gelen müşteri: başlangıç şimdi, kiralama doğrudan Aktif olur.</summary>
-    Kiralama KiralamaBaslat(int musteriId, int personelId, IEnumerable<int> ekipmanIdleri, DateTime planlananBitis);
+    Kiralama KiralamaBaslat(int musteriId, IEnumerable<int> ekipmanIdleri, DateTime planlananBitis);
 
     /// <summary>Rezervasyonu Aktif yapar; başlangıç gerçek teslim anı olur, müsaitlik yeniden kontrol edilir.</summary>
     void TeslimEt(int kiralamaId);
