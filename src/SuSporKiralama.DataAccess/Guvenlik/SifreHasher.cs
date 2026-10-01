@@ -6,7 +6,6 @@ namespace SuSporKiralama.DataAccess.Guvenlik;
 /// Şifreleri PBKDF2 (SHA-256) ile özetler. Her şifre için rastgele bir salt üretilir;
 /// böylece aynı şifreye sahip iki kullanıcının hash'i bile farklı olur.
 /// Saklama biçimi: "iterasyon.salt.hash" (salt ve hash Base64).
-/// Doğrulama metodu giriş ekranıyla birlikte (4. aşama) eklenecek.
 /// </summary>
 public static class SifreHasher
 {
@@ -22,6 +21,25 @@ public static class SifreHasher
         var salt = RandomNumberGenerator.GetBytes(SaltBoyutu);
         var hash = Rfc2898DeriveBytes.Pbkdf2(sifre, salt, Iterasyon, HashAlgorithmName.SHA256, HashBoyutu);
         return $"{Iterasyon}.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
+    }
+
+    /// <summary>
+    /// Girilen şifre kayıtlı hash'le eşleşiyor mu? Kayıttaki salt ve iterasyonla şifre yeniden
+    /// özetlenir ve karşılaştırılır. Bozuk/eksik hash'te false döner (exception fırlatmaz).
+    /// </summary>
+    public static bool Dogrula(string sifre, string? kayitliHash)
+    {
+        if (string.IsNullOrEmpty(sifre) || !GecerliHashMi(kayitliHash))
+            return false;
+
+        var parcalar = kayitliHash!.Split('.');
+        var iterasyon = int.Parse(parcalar[0]);
+        var salt = Convert.FromBase64String(parcalar[1]);
+        var beklenen = Convert.FromBase64String(parcalar[2]);
+
+        var hesaplanan = Rfc2898DeriveBytes.Pbkdf2(sifre, salt, iterasyon, HashAlgorithmName.SHA256, beklenen.Length);
+        // Sabit süreli karşılaştırma: kaç baytın eşleştiği yanıt süresinden anlaşılamaz.
+        return CryptographicOperations.FixedTimeEquals(hesaplanan, beklenen);
     }
 
     /// <summary>
