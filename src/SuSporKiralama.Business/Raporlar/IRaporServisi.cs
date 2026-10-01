@@ -12,6 +12,18 @@ public interface IRaporServisi
     /// <summary>Yılın 12 ayı için gelir; ödeme olmayan aylar 0.</summary>
     List<AylikGelir> AylikGelirler(int yil);
 
+    /// <summary>
+    /// Başlangıcı [baslangic, bitis) içinde olan teslim edilmiş (Aktif/Tamamlandı) kiralamalara göre
+    /// en çok kiralanan ilk "adet" ekipman. Sıra: kiralanma sayısı, sonra toplam süre.
+    /// </summary>
+    List<EkipmanKiralamaIstatistigi> EnCokKiralananlar(DateTime baslangic, DateTime bitis, int adet);
+
+    /// <summary>
+    /// [baslangic, bitis] günlerinde ekipman türü başına doluluk: kiralanan saat /
+    /// (hizmet dışı olmayan ekipman sayısı × çalışma saati). Yalnızca çalışma saatleri içi sayılır.
+    /// </summary>
+    List<DolulukOrani> DolulukOranlari(DateOnly baslangic, DateOnly bitis);
+
     /// <summary>Ana ekran özeti; "bugün" ve "şimdi" TimeProvider'dan alınır.</summary>
     DashboardOzeti DashboardOzeti();
 }
