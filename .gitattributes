@@ -1,0 +1,11 @@
+# Satır sonları: depoda LF, Windows çalışma kopyasında CRLF.
+* text=auto
+
+*.cs      text eol=crlf
+*.csproj  text eol=crlf
+*.slnx    text eol=crlf
+*.sln     text eol=crlf
+*.md      text eol=crlf
+*.json    text eol=crlf
+
+*.png     binary
