@@ -3,6 +3,7 @@
     <Project Path="src/SuSporKiralama.Business/SuSporKiralama.Business.csproj" />
     <Project Path="src/SuSporKiralama.DataAccess/SuSporKiralama.DataAccess.csproj" />
     <Project Path="src/SuSporKiralama.Entities/SuSporKiralama.Entities.csproj" />
+    <Project Path="src/SuSporKiralama.YapayZeka/SuSporKiralama.YapayZeka.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/SuSporKiralama.Tests/SuSporKiralama.Tests.csproj" />

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Business'a referans verir; Business bu projeyi bilmez (arayüz Business'ta, implementasyon burada). -->
+  <ItemGroup>
+    <ProjectReference Include="..\SuSporKiralama.Business\SuSporKiralama.Business.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
