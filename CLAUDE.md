@@ -3,8 +3,8 @@
 Su sporları ekipman kiralama otomasyonu (NTP dersi dönem projesi). Yol haritası: `docs/PLAN.md`.
 
 ## Mimari
-- Katmanlar: `Entities` ← `DataAccess` ← `Business` ← UI (Windows Forms, ileride).
-- Referans yönü tek yönlüdür: DataAccess → Entities; Business → DataAccess + Entities; UI → Business (+ gerekirse Entities). Tersine referans eklenmez.
+- Katmanlar: `Entities` ← `DataAccess` ← `Business` ← UI (Windows Forms, ileride). `YapayZeka` Business'ın yanında, öneri sağlayıcılarını içerir.
+- Referans yönü tek yönlüdür: DataAccess → Entities; Business → DataAccess + Entities; YapayZeka → Business; UI → Business + YapayZeka (+ gerekirse Entities). Tersine referans eklenmez; Business yapay zeka sağlayıcılarını yalnızca `IAiOneriSaglayici` arayüzü üzerinden bilir.
 - DevExpress paketleri, referansları ve kodu **yalnızca UI katmanında** olur.
 - Class library'ler `net10.0`; UI projesi `net10.0-windows`.
 
