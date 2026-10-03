@@ -108,3 +108,22 @@ setx ANTHROPIC_API_KEY "sk-ant-..."
 | `Claude:ZamanAsimiSaniye` | `20` | Bu süre dolarsa kural tabanlı öneriye geçilir |
 
 **Anahtar yoksa ne olur?** Uygulama çalışmaya devam eder: Claude'a istek gönderilmez, öneri kural tabanlı sağlayıcıdan gelir (metindeki sayılar, "ilk kez", "sakin", "kano", "çocuk" gibi ipuçları ve deneyim seviyesiyle) ve sonuçta yapay zekanın kullanılamadığı belirtilir. Doğrulama, can yeleği kuralı ve ücret hesabı her iki durumda da aynıdır.
+
+## Geliştirme süreci
+
+Proje, dönem boyunca 10 aşamada geliştirilmektedir.
+
+| # | Aşama | Durum |
+|---|---|---|
+| 1 | İskelet + veritabanı | ✅ Tamamlandı |
+| 2 | Business CRUD + test projesi | ✅ Tamamlandı |
+| 3 | Kiralama akışı + ücret/kiralama testleri | ✅ Tamamlandı |
+| 4 | Giriş ve raporlama | ✅ Tamamlandı |
+| 5 | Yapay zeka servisi | ✅ Tamamlandı |
+| 6 | DevExpress kurulumu | ⏳ Planlandı |
+| 7 | CRUD formları | ⏳ Planlandı |
+| 8 | Kiralama/iade ekranları, dashboard | ⏳ Planlandı |
+| 9 | Kiralama fişi (XtraReports), yapay zeka öneri ekranı | ⏳ Planlandı |
+| 10 | Son düzenlemeler | ⏳ Planlandı |
+
+Her aşamanın kapsamı ve tamamlanma notları için: [docs/PLAN.md](docs/PLAN.md)
