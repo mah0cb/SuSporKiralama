@@ -8,7 +8,7 @@ Proje dönem boyunca 10 aşamada geliştirilir. Her aşama bitince burada "tamam
 | 2 | Business CRUD + test projesi | ✅ Tamamlandı |
 | 3 | Kiralama akışı + ücret/kiralama testleri | ✅ Tamamlandı |
 | 4 | Giriş ve raporlama | ✅ Tamamlandı |
-| 5 | Yapay zeka servisi | Bekliyor |
+| 5 | Yapay zeka servisi | ✅ Tamamlandı |
 | 6 | DevExpress kurulumu | Bekliyor |
 | 7 | CRUD formları | Bekliyor |
 | 8 | Kiralama/iade ekranları, dashboard | Bekliyor |
@@ -50,8 +50,10 @@ PBKDF2 ile şifre doğrulama, oturumdaki personel bilgisi, rol bazlı yetki (Adm
 
 `CrudServisiTemel` Ekle/Guncelle/Sil'de servisin `YonetimIslemi` yetkisini kontrol eder; kendi yetkisi olan özel işlemler yetkisiz iç akış `GuncellemeAkisi`'nı kullanır. Okuma metotları yetkiye tabi değil. `RezervasyonOlustur`/`KiralamaBaslat` artık `personelId` almaz, personel oturumdan gelir. Raporlar `IRepository.Query()` (AsNoTracking) ile veritabanında çalışır; gelir = ödeme tarihine göre `Odemeler`. En çok kiralananlarda süre ve doluluk oranında çalışma saati kesişimi bellekte hesaplanır (tarih farkı SQLite'ta çevrilemiyor). Çalışma saatleri `IsletmeAyarlari` ile verilir (varsayılan 09:00–19:00). Sorguların SQL Server'da da SQL'e çevrildiği LocalDB'de doğrulandı. 216 test başarılı.
 
-## 5. Yapay zeka servisi
+## 5. Yapay zeka servisi — ✅ Tamamlandı
 IAiOneriServisi arayüzü; Claude API'yi HttpClient ile çağıran gerçek implementasyon (API anahtarı repoya girmez) ve internet yokken çalışan sahte implementasyon. Senaryo: müşterinin serbest metin tarifi + müsait ekipman listesi → önerilen ekipman paketi (JSON yanıt).
+
+**Not (03.10.2026):** Önce iki temizlik: `ponytail:` yorum etiketleri `// NOT:` oldu; `.gitattributes` eklendi (depoda LF, çalışma kopyasında CRLF). Business'ta `Oneri/` klasörü: `IAiOneriSaglayici` (ham öneri üretir), `OneriServisi` (`IOneriServisi`, `KiralamaIslemleri` yetkisi) ve record DTO'lar. Yeni `SuSporKiralama.YapayZeka` projesi (YapayZeka → Business; Business onu bilmez): `ClaudeAiOneriSaglayici`, `KuralTabanliOneriSaglayici`, `YedekliOneriSaglayici`, `ClaudeAyarlari`. Desenler: **Strategy** (üç sağlayıcı aynı arayüzü uygular, OneriServisi hangisi olduğunu bilmez) ve **Decorator** (`YedekliOneriSaglayici` aynı arayüzü uygulayıp asıl sağlayıcıyı sarar, zaman aşımı + yedeğe geçiş davranışı ekler). `OneriServisi` sağlayıcıya güvenmez: listede olmayan kodu (kayıtlı değil / o aralıkta müsait değil ayrımıyla), tekrarı atar, kodları büyük harfe çevirir, kişi sayısını 1–20'ye çeker, her kişiye bir can yeleği olacak şekilde müsait yeleklerden tamamlar; yelek ya da taşıma kapasitesi (SUP 1, kano kapasitesi kadar) yetmiyorsa `EkipmanYeterli=false` ve sebebi yazar (tekne otomatik eklenmez). Ücret ve depozito `UcretHesapla` ile hesaplanır. Aralıkta hiç müsait ekipman yoksa sağlayıcı çağrılmaz. Claude: `POST /v1/messages`, `x-api-key` istek başına header'da, `anthropic-version: 2023-06-01`, Türkçe sistem promptu, yanıt `output_config.format` JSON şemasıyla zorlanır ve istemcide de katı ayrıştırılır. Varsayılan model `claude-sonnet-5-5` + `effort: low`: Haiku 4.5 daha ucuz ama 15.10.2026'dan sonra emekliye ayrılabiliyor; model/efor ayardan değişir. Anahtar önce `ANTHROPIC_API_KEY`, yoksa appsettings.json; `ClaudeAyarlari.ToString()` ve hata mesajları anahtarı yazmaz. Yedekli sağlayıcı anahtar yokken, HTTP/bağlantı hatasında, geçersiz yanıtta ve zaman aşımında (varsayılan 20 sn, `TimeProvider` ile) kural tabanlıya geçip uyarı yazar; çağıranın iptali ve beklenmeyen hatalar gizlenmez. Testler gerçek ağa çıkmaz (sahte `HttpMessageHandler`). Ortamda API anahtarı olmadığı için gerçek API denemesi yapılmadı. 286 test başarılı.
 
 ## 6. DevExpress kurulumu
 Windows Forms UI projesi (net10.0-windows) DevExpress şablonuyla; giriş formu, RibbonForm ana form, tema.
