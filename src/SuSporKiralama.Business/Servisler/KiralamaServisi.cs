@@ -217,7 +217,7 @@ public class KiralamaServisi(
         return kiralama;
     }
 
-    // ponytail: ekipman başına bir sorgu; kiralamada birkaç ekipman olduğu için yeterli.
+    // NOT: ekipman başına bir sorgu; kiralamada birkaç ekipman olduğu için yeterli.
     private void MusaitlikKontrol(IEnumerable<Ekipman> ekipmanlar, DateTime baslangic, DateTime bitis, int? haricKiralamaId)
     {
         var musaitOlmayanlar = ekipmanlar

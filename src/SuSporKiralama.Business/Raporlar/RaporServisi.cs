@@ -132,7 +132,7 @@ public class RaporServisi(
 
         // Kullanılabilir ekipman: hizmet dışı olmayan. Bakımdakiler dahildir; hasarlı iade edilen
         // ekipman bakıma girer ve o güne kadarki kiralama saatleri paydada karşılıksız kalmamalı.
-        // ponytail: ekipman sayısı bugünkü duruma göre; geçmiş durum tutulmadığı için aralıkta
+        // NOT: ekipman sayısı bugünkü duruma göre; geçmiş durum tutulmadığı için aralıkta
         // sonradan eklenen/hizmet dışı kalan ekipman hesaba katılamaz. Gerekirse durum geçmişi tablosu.
         // Veritabanında: GROUP BY EkipmanTipi, COUNT(*).
         var ekipmanSayilari = ekipmanRepository.Query()

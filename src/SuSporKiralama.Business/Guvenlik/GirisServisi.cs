@@ -22,7 +22,7 @@ public class GirisServisi(IRepository<Personel> personelRepository, Oturum oturu
     // kullanıcı adının var olup olmadığı anlaşılamaz.
     private static readonly string SahteHash = SifreHasher.Hashle(Guid.NewGuid().ToString());
 
-    // ponytail: sayaç bellekte; uygulama tek bilgisayarda çalıştığı için yeterli,
+    // NOT: sayaç bellekte; uygulama tek bilgisayarda çalıştığı için yeterli,
     // uygulama yeniden başlatılınca sıfırlanır. Kalıcı olması gerekirse Personel tablosuna taşınır.
     private readonly Dictionary<string, (int Hata, DateTimeOffset? KilitBitis)> _denemeler = [];
 
