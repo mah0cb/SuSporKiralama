@@ -10,12 +10,18 @@ Nesne Tabanlı Programlama dersi dönem projesi; katmanlı mimaride C# ile geli�
 | Dil / platform | C#, .NET 10 |
 | Veri erişimi | Entity Framework Core 10 (Code First, Fluent API, migration) |
 | Veritabanı | SQL Server LocalDB |
-| Arayüz | Windows Forms + DevExpress — *geliştirilecek* |
+| Arayüz | Windows Forms + DevExpress 26.1 (RibbonForm, XtraForm, DocumentManager, WXI teması) |
+| Bağımlılıkların bağlanması | Microsoft.Extensions.DependencyInjection (composition root: `Program.cs`) |
 | Yapay zeka | Claude API (Messages API, HttpClient) ile ekipman önerisi; internet yoksa kural tabanlı yedek |
 
 ## Kurulum
 
-Gerekenler: .NET 10 SDK, SQL Server Express LocalDB (Visual Studio Installer → Tek tek bileşenler → "SQL Server Express LocalDB").
+### Gereksinimler
+
+- .NET 10 SDK
+- SQL Server Express LocalDB (Visual Studio Installer → Tek tek bileşenler → "SQL Server Express LocalDB")
+- **DevExpress 26.1** (WinForms bileşenleri) kurulu olmalı: arayüz projesi DevExpress paketlerini kurulumla gelen yerel NuGet kaynağından ("DevExpress 26.1 Local") alır. Lisans anahtarı kullanıcının kendi klasöründedir (`%AppData%\DevExpress`), repoya girmez. DevExpress kurulu değilse arayüz projesi derlenmez; diğer projeler ve testler derlenir.
+- Formları Designer'da açmak için Visual Studio (DevExpress kurulumuyla gelen Visual Studio eklentisi)
 
 ```powershell
 # 1. LocalDB'nin kurulu olduğunu kontrol edin (MSSQLLocalDB görünmeli)
@@ -24,8 +30,10 @@ sqllocaldb info
 # 2. Proje araçlarını (dotnet-ef) geri yükleyin
 dotnet tool restore
 
-# 3. Bağlantı ayarını oluşturun (appsettings.json repoda yoktur)
+# 3. Bağlantı ayarlarını oluşturun (appsettings.json repoda yoktur)
+#    DataAccess'teki dosyayı "dotnet ef" komutları, UI'daki dosyayı uygulama kullanır.
 Copy-Item src/SuSporKiralama.DataAccess/appsettings.example.json src/SuSporKiralama.DataAccess/appsettings.json
+Copy-Item src/SuSporKiralama.UI/appsettings.example.json src/SuSporKiralama.UI/appsettings.json
 
 # 4. Derleyin, veritabanını oluşturun ve örnek veriyi yükleyin
 dotnet build
@@ -42,6 +50,27 @@ dotnet ef database update -p src/SuSporKiralama.DataAccess
 |---|---|---|
 | admin | Admin123! | Admin |
 | personel | Personel123! | Personel |
+
+## Uygulamayı çalıştırma
+
+1. Kurulum adımlarını tamamlayın (özellikle `src/SuSporKiralama.UI/appsettings.json` dosyası ve `dotnet ef database update`). UI'daki `appsettings.json` derlemede çıktı klasörüne kopyalanır.
+2. Visual Studio'da **SuSporKiralama.UI** projesini başlangıç projesi yapıp çalıştırın (F5) ya da komut satırından:
+
+   ```powershell
+   dotnet run --project src/SuSporKiralama.UI
+   ```
+
+3. Giriş ekranında yukarıdaki [örnek kullanıcılardan](#örnek-kullanıcılar-geliştirme-amaçlı) biriyle giriş yapın. Admin tüm menüleri görür; Personel rolünde Personel butonu ve Raporlar sayfası gizlidir.
+
+| `appsettings.json` bölümü | Açıklama |
+|---|---|
+| `ConnectionStrings:SuSporKiralama` | Veritabanı bağlantısı (varsayılan LocalDB) |
+| `Claude` | Yapay zeka ayarları (aşağıda) |
+| `IsletmeAyarlari` | Açılış/kapanış saati (`"09:00"` / `"19:00"`); doluluk oranı bu saatlere göre hesaplanır |
+
+- Veritabanına ulaşılamazsa uygulama açılırken bağlantı dizesini ve LocalDB'yi kontrol etmenizi söyleyip kapanır.
+- Beklenmeyen hatalar `bin/.../logs/hata-yyyy-MM-dd.log` dosyasına yazılır (gitignore'da; API anahtarı loga girmez).
+- Seçilen tema `%AppData%\SuSporKiralama\tema.json` dosyasında hatırlanır (varsayılan WXI).
 
 ## Klasör yapısı
 
@@ -60,11 +89,16 @@ src/
 │  └─ Migrations/
 ├─ SuSporKiralama.Business/     İş kuralları, servisler, yetki, raporlar
 │  └─ Oneri/                    Öneri servisi, sağlayıcı arayüzü (IAiOneriSaglayici), DTO'lar
-└─ SuSporKiralama.YapayZeka/    Claude, kural tabanlı ve yedekli öneri sağlayıcıları
+├─ SuSporKiralama.YapayZeka/    Claude, kural tabanlı ve yedekli öneri sağlayıcıları
+└─ SuSporKiralama.UI/           Windows Forms + DevExpress arayüzü
+   ├─ Program.cs                Composition root: DI kayıtları, açılış kontrolleri
+   ├─ Altyapi/                  Form açıcı (DI kapsamı), hata yönetimi, tema ayarı
+   ├─ Formlar/                  Giriş formu, Ribbon ana form
+   └─ Ekranlar/                 Ana formda sekme olarak açılan ekranlar
 tests/SuSporKiralama.Tests/     xUnit testleri (bellekte SQLite, sahte HTTP)
 ```
 
-Referans yönü: `DataAccess → Entities`, `Business → DataAccess + Entities`, `YapayZeka → Business`. Business, YapayZeka'yı bilmez. Arayüz projesi ileride eklenecek.
+Referans yönü: `DataAccess → Entities`, `Business → DataAccess + Entities`, `YapayZeka → Business`, `UI → Business + YapayZeka + DataAccess + Entities`. Business ne YapayZeka'yı ne de UI'ı bilir. UI'da DataAccess yalnızca `Program.cs`'teki DI kayıtları için kullanılır; formlar yalnızca Business arayüzleriyle çalışır.
 
 ## Yapay zeka özelliği
 
@@ -77,15 +111,16 @@ Personel, müşterinin ihtiyacını serbest metinle (ör. "2 kişiyiz, ilk kez d
 3. `OneriServisi` sağlayıcıya güvenmez: müsait olmayan / listede olmayan / tekrar eden kodları atar, her kişiye bir can yeleği olacak şekilde eksikleri tamamlar, ekipman yetersizse bunu açıkça yazar. Ücret ve depozito modelden alınmaz, `UcretHesapla` ile hesaplanır. Yapılan her düzeltme sonuçta listelenir.
 4. `YedekliOneriSaglayici` önce Claude'u dener; anahtar yoksa, HTTP hatasında, geçersiz yanıtta ya da zaman aşımında (varsayılan 20 sn) `KuralTabanliOneriSaglayici`'ya geçer ve sonuçta "Yapay zeka şu an kullanılamıyor, kural tabanlı öneri gösteriliyor." yazar.
 
-Bileşenler DI container olmadan şöyle bağlanır (arayüz katmanında yapılacak):
+Bileşenler arayüz projesinin `Program.cs` dosyasında DI ile şöyle bağlanır:
 
 ```csharp
-var ayarlar = ClaudeAyarlari.Yukle(AppContext.BaseDirectory);
-IAiOneriSaglayici saglayici = new YedekliOneriSaglayici(
-    new ClaudeAiOneriSaglayici(new HttpClient(), ayarlar),
+var claudeAyarlari = ClaudeAyarlari.Yukle(klasor);
+servisler.AddSingleton<IAiOneriSaglayici>(sp => new YedekliOneriSaglayici(
+    new ClaudeAiOneriSaglayici(new HttpClient(), claudeAyarlari),
     new KuralTabanliOneriSaglayici(),
-    ayarlar.ZamanAsimi);
-var oneriServisi = new OneriServisi(musaitlikServisi, musteriRepo, ekipmanRepo, saglayici, yetkiServisi);
+    claudeAyarlari.ZamanAsimi,
+    sp.GetRequiredService<TimeProvider>()));
+servisler.AddScoped<IOneriServisi, OneriServisi>();
 ```
 
 **API anahtarı nasıl ayarlanır**
