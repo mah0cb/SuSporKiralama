@@ -23,3 +23,4 @@ Su sporları ekipman kiralama otomasyonu (NTP dersi dönem projesi). Yol haritas
 - Küçük ve anlamlı commit'ler; mesajlar Türkçe ve açıklayıcı. Her değişiklikten sonra `dotnet build` alınır, iş biriktirilmez. Push'u proje sahibi yapar.
 - Sadece aktif aşama uygulanır. Gelecek aşamalar yalnızca tasarım kararlarında dikkate alınır; ileri bir aşamaya ait bir şey gerekli görünürse kod yazılmaz, kullanıcıya sorulur.
 - Her aşama bitince `docs/PLAN.md`'de o aşama "tamamlandı" olarak işaretlenir ve kısa not düşülür.
+- UI testlerinde asla masaüstünün tamamının ekran görüntüsünü alma; gerekirse yalnızca uygulamanın kendi penceresini kullan.
