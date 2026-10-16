@@ -27,7 +27,22 @@ internal static class Program
     private static void Main()
     {
         ApplicationConfiguration.Initialize();
+        HataYoneticisi.Baglan();
 
+        // Açılıştaki hatalar (bozuk appsettings.json, hatalı DI kaydı) henüz ThreadException'a
+        // gelmez; burada yakalanıp aynı şekilde işlenir.
+        try
+        {
+            Baslat();
+        }
+        catch (Exception hata)
+        {
+            HataYoneticisi.Isle(hata);
+        }
+    }
+
+    private static void Baslat()
+    {
         var klasor = AppContext.BaseDirectory;
         if (!File.Exists(Path.Combine(klasor, "appsettings.json")))
         {
@@ -80,6 +95,7 @@ internal static class Program
         // Yapay zeka: Claude denenir, olmazsa kural tabanlı öneriye geçilir (Decorator).
         // Sağlayıcılar durumsuz, HttpClient uygulama boyunca tek olduğu için singleton.
         var claudeAyarlari = ClaudeAyarlari.Yukle(klasor);
+        HataYoneticisi.GizliDeger = claudeAyarlari.ApiAnahtari; // anahtar hiçbir koşulda loga girmesin
         servisler.AddSingleton(claudeAyarlari);
         servisler.AddSingleton<IAiOneriSaglayici>(sp => new YedekliOneriSaglayici(
             new ClaudeAiOneriSaglayici(new HttpClient(), claudeAyarlari),
