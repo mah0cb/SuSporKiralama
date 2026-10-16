@@ -155,8 +155,9 @@ Proje, dönem boyunca 10 aşamada geliştirilmektedir.
 | 3 | Kiralama akışı + ücret/kiralama testleri | ✅ Tamamlandı |
 | 4 | Giriş ve raporlama | ✅ Tamamlandı |
 | 5 | Yapay zeka servisi | ✅ Tamamlandı |
-| 6 | DevExpress kurulumu | ⏳ Planlandı |
+| 6 | DevExpress kurulumu | ✅ Tamamlandı |
 | 7 | CRUD formları | ⏳ Planlandı |
+| Ara | Demo verisi, SQL loglama, diyagramlar | ⏸️ Ertelendi (7. aşamadan sonra) |
 | 8 | Kiralama/iade ekranları, dashboard | ⏳ Planlandı |
 | 9 | Kiralama fişi (XtraReports), yapay zeka öneri ekranı | ⏳ Planlandı |
 | 10 | Son düzenlemeler | ⏳ Planlandı |

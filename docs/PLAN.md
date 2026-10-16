@@ -2,6 +2,8 @@
 
 Proje dönem boyunca 10 aşamada geliştirilir. Her aşama bitince burada "tamamlandı" olarak işaretlenir.
 
+**Sıra değişikliği (16.10.2026):** 5. aşamadan sonra planlanan ara aşama (demo verisi, SQL loglama, diyagramlar) ertelendi. Yeni sıra: 6 → 7 → ara aşama → 8 → 9 → 10.
+
 | # | Aşama | Durum |
 |---|---|---|
 | 1 | İskelet + veritabanı | ✅ Tamamlandı |
@@ -9,8 +11,9 @@ Proje dönem boyunca 10 aşamada geliştirilir. Her aşama bitince burada "tamam
 | 3 | Kiralama akışı + ücret/kiralama testleri | ✅ Tamamlandı |
 | 4 | Giriş ve raporlama | ✅ Tamamlandı |
 | 5 | Yapay zeka servisi | ✅ Tamamlandı |
-| 6 | DevExpress kurulumu | Bekliyor |
+| 6 | DevExpress kurulumu | ✅ Tamamlandı |
 | 7 | CRUD formları | Bekliyor |
+| Ara | Demo verisi, SQL loglama, diyagramlar | Ertelendi (7. aşamadan sonra) |
 | 8 | Kiralama/iade ekranları, dashboard | Bekliyor |
 | 9 | Kiralama fişi (XtraReports), yapay zeka öneri ekranı | Bekliyor |
 | 10 | Son düzenlemeler | Bekliyor |
@@ -55,8 +58,22 @@ IAiOneriServisi arayüzü; Claude API'yi HttpClient ile çağıran gerçek imple
 
 **Not (03.10.2026):** Önce iki temizlik: `ponytail:` yorum etiketleri `// NOT:` oldu; `.gitattributes` eklendi (depoda LF, çalışma kopyasında CRLF). Business'ta `Oneri/` klasörü: `IAiOneriSaglayici` (ham öneri üretir), `OneriServisi` (`IOneriServisi`, `KiralamaIslemleri` yetkisi) ve record DTO'lar. Yeni `SuSporKiralama.YapayZeka` projesi (YapayZeka → Business; Business onu bilmez): `ClaudeAiOneriSaglayici`, `KuralTabanliOneriSaglayici`, `YedekliOneriSaglayici`, `ClaudeAyarlari`. Desenler: **Strategy** (üç sağlayıcı aynı arayüzü uygular, OneriServisi hangisi olduğunu bilmez) ve **Decorator** (`YedekliOneriSaglayici` aynı arayüzü uygulayıp asıl sağlayıcıyı sarar, zaman aşımı + yedeğe geçiş davranışı ekler). `OneriServisi` sağlayıcıya güvenmez: listede olmayan kodu (kayıtlı değil / o aralıkta müsait değil ayrımıyla), tekrarı atar, kodları büyük harfe çevirir, kişi sayısını 1–20'ye çeker, her kişiye bir can yeleği olacak şekilde müsait yeleklerden tamamlar; yelek ya da taşıma kapasitesi (SUP 1, kano kapasitesi kadar) yetmiyorsa `EkipmanYeterli=false` ve sebebi yazar (tekne otomatik eklenmez). Ücret ve depozito `UcretHesapla` ile hesaplanır. Aralıkta hiç müsait ekipman yoksa sağlayıcı çağrılmaz. Claude: `POST /v1/messages`, `x-api-key` istek başına header'da, `anthropic-version: 2023-06-01`, Türkçe sistem promptu, yanıt `output_config.format` JSON şemasıyla zorlanır ve istemcide de katı ayrıştırılır. Varsayılan model `claude-sonnet-5-5` + `effort: low`: Haiku 4.5 daha ucuz ama 15.10.2026'dan sonra emekliye ayrılabiliyor; model/efor ayardan değişir. Anahtar önce `ANTHROPIC_API_KEY`, yoksa appsettings.json; `ClaudeAyarlari.ToString()` ve hata mesajları anahtarı yazmaz. Yedekli sağlayıcı anahtar yokken, HTTP/bağlantı hatasında, geçersiz yanıtta ve zaman aşımında (varsayılan 20 sn, `TimeProvider` ile) kural tabanlıya geçip uyarı yazar; çağıranın iptali ve beklenmeyen hatalar gizlenmez. Testler gerçek ağa çıkmaz (sahte `HttpMessageHandler`). Ortamda API anahtarı olmadığı için gerçek API denemesi yapılmadı. 286 test başarılı.
 
-## 6. DevExpress kurulumu
+## 6. DevExpress kurulumu — ✅ Tamamlandı
 Windows Forms UI projesi (net10.0-windows) DevExpress şablonuyla; giriş formu, RibbonForm ana form, tema.
+
+**Not (16.10.2026):** `SuSporKiralama.UI` (net10.0-windows) eklendi; Business, DataAccess, YapayZeka ve Entities'e referans verir, Business UI'ı bilmez. Paketler (26.1.5, "DevExpress 26.1 Local"): `DevExpress.Win.Design` (resmî Designer/IDE entegrasyonu paketi; Ribbon, editörler, DocumentManager ve temaları içeren Win.Navigation'ı, ayrıca Grid, Charts ve Reporting'i geçişli getirir, bu yüzden 7–9. aşamalarda yeni DevExpress paketi gerekmez), `DevExpress.Images` (hazır SVG ikonlar), `Microsoft.Extensions.DependencyInjection` 10.0.12. DevExpress Documentation MCP bu oturumda yoktu, docs.devexpress.com erişime kapalıydı; API'ler paketlerdeki XML belge dosyalarından ve derlemeyle doğrulandı. DevExpress lisans dosyaları gitignore'a eklendi. Ön kontrolde EF Core SqlServer üzerinden gelen `System.Security.Cryptography.Pkcs` 9.0.11 için yeni NU1902/NU1903 güvenlik uyarıları görüldü; DataAccess'te 10.0.13'e sabitlendi.
+
+Composition root `Program.cs`: `ValidateOnBuild` ve `ValidateScopes` açık; appsettings.json yoksa, bağlantı dizesi eksikse veya veritabanına ulaşılamazsa açıklayıcı mesajla kapanır. UI kendi `appsettings.json`'ını okur (ConnectionStrings, Claude, yeni `IsletmeAyarlari` bölümü); `ClaudeAyarlari.Yukle` aynen kullanılır.
+
+| Kayıt | Ömür | Gerekçe |
+|---|---|---|
+| `Oturum` / `IOturum` (aynı nesne), `IYetkiServisi`, `GirisDenemeSayaci` | Singleton | Oturum, yetki ve kaba kuvvet sayacı uygulama boyunca tek |
+| `TimeProvider`, `IsletmeAyarlari`, `ClaudeAyarlari`, `UygulamaBilgisi`, `FormAcici` | Singleton | Açılışta bir kez oluşturulur, durumsuz |
+| `IAiOneriSaglayici` → `YedekliOneriSaglayici(Claude, KuralTabanli)` | Singleton | Sağlayıcılar durumsuz, tek HttpClient |
+| `SuSporKiralamaDbContext`, `IRepository<>`, tüm Business servisleri | Scoped | Her form kendi DbContext'iyle çalışır; eski takip verisi formlar arasında karışmaz |
+| `GirisFormu`, `AnaForm`, `BaslangicEkrani` | Transient | `FormAcici` her açılışta yeni kapsam açar, form dispose olunca kapsam da kapanır |
+
+Kaba kuvvet sayacı `GirisServisi`'nden `GirisDenemeSayaci`'na taşındı (GirisServisi DbContext'e bağlı olduğu için scoped); paylaşılan sayaçla kilidin yeni serviste de sürdüğünü gösteren test eklendi. Giriş akışı: Program'da döngü; giriş formu her seferinde yeni açılır (alanlar boş), başarılı girişte kapanır, ana form `Application.Run` ile çalışır; "Çıkış Yap" oturumu kapatıp ana formu (sekmeleriyle) kapatır ve giriş formu yeniden açılır, X ile kapatma uygulamayı kapatır. Ana form: Ribbon sayfaları Kiralama / Kayıtlar / Raporlar / Yapay Zeka / Sistem; buton → yetki ve SVG ikon eşlemesi `AnaForm.ButonlariHazirla`'daki tek tabloda (Kiralama butonları ve Ekipman Önerisi: KiralamaIslemleri, Ekipmanlar: EkipmanDurumDegistirme, Müşteriler: MusteriIslemleri, Personel: PersonelYonetimi, Dashboard: RaporGoruntuleme, tema ve çıkış herkese). Yetkisiz buton ve görünür butonu kalmayan sayfa gizlenir (Personel rolünde Personel butonu ve Raporlar sayfası). Yapılmamış ekranlar ortak yer tutucu mesajı verir. `EkraniAc<T>()` ekranı DocumentManager + TabbedView ile sekmede açar, açıksa öne getirir (7. aşamada kullanılacak); başlangıç sekmesi kapatılamaz. Durum çubuğu: personel ve rol, veritabanı adı, saat. İkonlar kodda atanır (Designer'da SVG ikon seçimi resx'e ikili veri yazar, elle üretilemiyor). Hata yönetimi: `HataYoneticisi` üç olayı bağlar; `IsKuraliException` mesajı uyarı olarak aynen, diğerleri genel mesaj + `logs/hata-yyyy-MM-dd.log` (API anahtarı loga yazılmaz). Tema varsayılan WXI; galeriden seçilen tema ve palet `%AppData%\SuSporKiralama\tema.json`'da hatırlanır. Uygulama UI Automation/MSAA ile çalıştırılarak denendi: açılış ve DI doğrulaması, hatalı giriş, 5 hatada kilit, Admin/Personel buton görünürlüğü, yer tutucu, çıkış, tema hatırlama. 287 test başarılı.
 
 ## 7. CRUD formları
 GridControl listeleri, LayoutControl ile ekle/düzenle formları, DXValidationProvider ile doğrulama.
