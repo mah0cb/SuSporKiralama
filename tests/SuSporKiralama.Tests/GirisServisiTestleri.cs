@@ -18,7 +18,7 @@ public class GirisServisiTestleri : IDisposable
 
     public GirisServisiTestleri()
     {
-        _servis = new GirisServisi(_db.Repo<Personel>(), _oturum, _zaman);
+        _servis = new GirisServisi(_db.Repo<Personel>(), _oturum, new GirisDenemeSayaci(_zaman));
         _deniz = new Personel("Deniz Kaya", "deniz", SifreHasher.Hashle(Sifre), Rol.Personel);
         _db.Context.Personeller.Add(_deniz);
         _db.Context.SaveChanges();
@@ -151,6 +151,23 @@ public class GirisServisiTestleri : IDisposable
         _servis.GirisYap("ali", Sifre);
 
         Assert.Equal(ali.Id, _oturum.PersonelId);
+    }
+
+    [Fact]
+    public void Kilit_AyniSayaciPaylasanYeniServisteDeSurer()
+    {
+        // Uygulamada GirisServisi her denemede yeniden oluşturulabilir (DbContext'e bağlı);
+        // sayaç tek örnek olduğu için kilit yeni serviste de geçerlidir.
+        var sayac = new GirisDenemeSayaci(_zaman);
+        for (var i = 0; i < 5; i++)
+            Assert.Throws<GirisBasarisizException>(() =>
+                new GirisServisi(_db.Repo<Personel>(), _oturum, sayac).GirisYap("deniz", "yanlis-sifre"));
+
+        var yeniServis = new GirisServisi(_db.Repo<Personel>(), _oturum, sayac);
+        var mesaj = Assert.Throws<GirisBasarisizException>(() => yeniServis.GirisYap("deniz", Sifre)).Message;
+
+        Assert.Contains("5 dakika", mesaj);
+        Assert.False(_oturum.GirisYapildiMi);
     }
 
     [Fact]
