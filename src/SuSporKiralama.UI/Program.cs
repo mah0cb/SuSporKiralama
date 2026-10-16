@@ -45,6 +45,9 @@ internal static class Program
 
     private static void Baslat()
     {
+        // Tema ilk iş uygulanır; açılıştaki hata mesajları da aynı temayla görünür.
+        TemaAyari.Uygula();
+
         var klasor = AppContext.BaseDirectory;
         if (!File.Exists(Path.Combine(klasor, "appsettings.json")))
         {
