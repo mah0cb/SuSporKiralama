@@ -13,6 +13,7 @@ using SuSporKiralama.Business.Servisler;
 using SuSporKiralama.DataAccess;
 using SuSporKiralama.DataAccess.Repository;
 using SuSporKiralama.UI.Altyapi;
+using SuSporKiralama.UI.Ekranlar;
 using SuSporKiralama.UI.Formlar;
 using SuSporKiralama.YapayZeka;
 
@@ -79,10 +80,22 @@ internal static class Program
 
         var formAcici = servisler.GetRequiredService<FormAcici>();
 
-        // Giriş formu her seferinde yeni açılır (alanlar boş, kendi kapsamı); başarılı girişte kapanır.
-        using var girisFormu = formAcici.Olustur<GirisFormu>();
-        if (girisFormu.ShowDialog() != DialogResult.OK)
-            return;
+        // Giriş → ana form döngüsü. "Çıkış Yap" ile kapanan ana formdan sonra giriş formu yeniden açılır;
+        // ana form X ile kapatılırsa ya da giriş vazgeçilirse uygulama kapanır.
+        while (true)
+        {
+            // Giriş formu her seferinde yeni oluşturulur: alanlar boş gelir, kendi kapsamı olur.
+            using (var girisFormu = formAcici.Olustur<GirisFormu>())
+            {
+                if (girisFormu.ShowDialog() != DialogResult.OK)
+                    return;
+            }
+
+            using var anaForm = formAcici.Olustur<AnaForm>();
+            Application.Run(anaForm);
+            if (!anaForm.CikisYapildi)
+                return;
+        }
     }
 
     private static ServiceCollection ServisleriKaydet(IConfiguration ayarlar, string baglantiDizesi, string klasor)
@@ -125,6 +138,8 @@ internal static class Program
 
         // --- Formlar: her açılışta yeni nesne, FormAcici'nin açtığı kapsamın içinden ---
         servisler.AddTransient<GirisFormu>();
+        servisler.AddTransient<AnaForm>();
+        servisler.AddTransient<BaslangicEkrani>();
 
         return servisler;
     }
