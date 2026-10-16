@@ -484,3 +484,8 @@ $RECYCLE.BIN/
 # Yerel bağlantı dizesi / gizli ayarlar repoya girmez
 appsettings.json
 
+
+# DevExpress lisans dosyaları (anahtar kullanıcı klasöründedir, repoya girmez)
+licenses.licx
+*.licenses
+DevExpress_License.txt

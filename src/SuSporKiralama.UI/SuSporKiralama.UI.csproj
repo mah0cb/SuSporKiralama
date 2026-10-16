@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+  </PropertyGroup>
+
+  <!-- UI composition root olduğu için tüm katmanları bilir; formlar yalnızca Business arayüzlerini kullanır. -->
+  <ItemGroup>
+    <ProjectReference Include="..\SuSporKiralama.Business\SuSporKiralama.Business.csproj" />
+    <ProjectReference Include="..\SuSporKiralama.DataAccess\SuSporKiralama.DataAccess.csproj" />
+    <ProjectReference Include="..\SuSporKiralama.Entities\SuSporKiralama.Entities.csproj" />
+    <ProjectReference Include="..\SuSporKiralama.YapayZeka\SuSporKiralama.YapayZeka.csproj" />
+  </ItemGroup>
+
+  <!-- DevExpress paketleri yalnızca bu projede. Win.Design: Visual Studio Designer desteği (tüm WinForms
+       kontrollerini geçişli getirir); Images: hazır SVG ikonlar. -->
+  <ItemGroup>
+    <PackageReference Include="DevExpress.Win.Design" Version="26.1.5" />
+    <PackageReference Include="DevExpress.Images" Version="26.1.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
+  </ItemGroup>
+
+  <!-- appsettings.json gitignore'da; varsa çıktı klasörüne kopyalanır. -->
+  <ItemGroup>
+    <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
