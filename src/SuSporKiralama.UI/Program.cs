@@ -13,6 +13,7 @@ using SuSporKiralama.Business.Servisler;
 using SuSporKiralama.DataAccess;
 using SuSporKiralama.DataAccess.Repository;
 using SuSporKiralama.UI.Altyapi;
+using SuSporKiralama.UI.Formlar;
 using SuSporKiralama.YapayZeka;
 
 namespace SuSporKiralama.UI;
@@ -75,6 +76,13 @@ internal static class Program
                   "dotnet ef database update -p src/SuSporKiralama.DataAccess");
             return;
         }
+
+        var formAcici = servisler.GetRequiredService<FormAcici>();
+
+        // Giriş formu her seferinde yeni açılır (alanlar boş, kendi kapsamı); başarılı girişte kapanır.
+        using var girisFormu = formAcici.Olustur<GirisFormu>();
+        if (girisFormu.ShowDialog() != DialogResult.OK)
+            return;
     }
 
     private static ServiceCollection ServisleriKaydet(IConfiguration ayarlar, string baglantiDizesi, string klasor)
@@ -114,6 +122,9 @@ internal static class Program
         servisler.AddScoped<IKiralamaServisi, KiralamaServisi>();
         servisler.AddScoped<IRaporServisi, RaporServisi>();
         servisler.AddScoped<IOneriServisi, OneriServisi>();
+
+        // --- Formlar: her açılışta yeni nesne, FormAcici'nin açtığı kapsamın içinden ---
+        servisler.AddTransient<GirisFormu>();
 
         return servisler;
     }
