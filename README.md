@@ -92,9 +92,9 @@ src/
 ├─ SuSporKiralama.YapayZeka/    Claude, kural tabanlı ve yedekli öneri sağlayıcıları
 └─ SuSporKiralama.UI/           Windows Forms + DevExpress arayüzü
    ├─ Program.cs                Composition root: DI kayıtları, açılış kontrolleri
-   ├─ Altyapi/                  Form açıcı (DI kapsamı), hata yönetimi, tema ayarı
-   ├─ Formlar/                  Giriş formu, Ribbon ana form
-   └─ Ekranlar/                 Ana formda sekme olarak açılan ekranlar
+   ├─ Altyapi/                  Form açıcı (DI kapsamı), hata yönetimi, tema ayarı, ortak liste davranışı
+   ├─ Formlar/                  Giriş formu, Ribbon ana form, ekle/düzenle formları
+   └─ Ekranlar/                 Ana formda sekme olarak açılan ekranlar (Ekipman, Müşteri, Personel)
 tests/SuSporKiralama.Tests/     xUnit testleri (bellekte SQLite, sahte HTTP)
 ```
 
@@ -156,7 +156,7 @@ Proje, dönem boyunca 10 aşamada geliştirilmektedir.
 | 4 | Giriş ve raporlama | ✅ Tamamlandı |
 | 5 | Yapay zeka servisi | ✅ Tamamlandı |
 | 6 | DevExpress kurulumu | ✅ Tamamlandı |
-| 7 | CRUD formları | ⏳ Planlandı |
+| 7 | CRUD formları | ✅ Tamamlandı |
 | Ara | Demo verisi, SQL loglama, diyagramlar | ⏸️ Ertelendi (7. aşamadan sonra) |
 | 8 | Kiralama/iade ekranları, dashboard | ⏳ Planlandı |
 | 9 | Kiralama fişi (XtraReports), yapay zeka öneri ekranı | ⏳ Planlandı |
