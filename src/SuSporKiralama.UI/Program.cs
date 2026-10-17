@@ -143,6 +143,8 @@ internal static class Program
         servisler.AddTransient<GirisFormu>();
         servisler.AddTransient<AnaForm>();
         servisler.AddTransient<BaslangicEkrani>();
+        servisler.AddTransient<EkipmanEkrani>();
+        servisler.AddTransient<EkipmanFormu>();
         servisler.AddTransient<MusteriEkrani>();
         servisler.AddTransient<MusteriFormu>();
 

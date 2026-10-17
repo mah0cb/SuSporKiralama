@@ -136,7 +136,7 @@ namespace SuSporKiralama.UI.Formlar
             btnEkipmanlar.Id = 6;
             btnEkipmanlar.Name = "btnEkipmanlar";
             btnEkipmanlar.RibbonStyle = DevExpress.XtraBars.Ribbon.RibbonItemStyles.Large;
-            btnEkipmanlar.ItemClick += YerTutucu_ItemClick;
+            btnEkipmanlar.ItemClick += btnEkipmanlar_ItemClick;
             //
             // btnMusteriler
             //
