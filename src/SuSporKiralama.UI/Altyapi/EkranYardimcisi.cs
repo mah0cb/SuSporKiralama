@@ -23,7 +23,6 @@ public static class EkranYardimcisi
     public static void ListeHazirla(GridView gorunum, Action duzenle)
     {
         gorunum.OptionsBehavior.Editable = false;
-        gorunum.OptionsFind.FindNullPrompt = "Aramak için yazın...";
 
         // Yalnızca veri satırına çift tıklanınca (başlık, grup satırı, boş alan hariç).
         gorunum.DoubleClick += (_, e) =>
