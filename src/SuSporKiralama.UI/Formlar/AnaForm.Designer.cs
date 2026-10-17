@@ -152,7 +152,7 @@ namespace SuSporKiralama.UI.Formlar
             btnPersonel.Id = 8;
             btnPersonel.Name = "btnPersonel";
             btnPersonel.RibbonStyle = DevExpress.XtraBars.Ribbon.RibbonItemStyles.Large;
-            btnPersonel.ItemClick += YerTutucu_ItemClick;
+            btnPersonel.ItemClick += btnPersonel_ItemClick;
             //
             // btnDashboard
             //

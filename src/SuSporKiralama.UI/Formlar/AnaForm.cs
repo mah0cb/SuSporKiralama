@@ -173,6 +173,8 @@ public partial class AnaForm : RibbonForm
 
     private void btnMusteriler_ItemClick(object sender, ItemClickEventArgs e) => EkraniAc<MusteriEkrani>();
 
+    private void btnPersonel_ItemClick(object sender, ItemClickEventArgs e) => EkraniAc<PersonelEkrani>();
+
     private void btnCikisYap_ItemClick(object sender, ItemClickEventArgs e)
     {
         _girisServisi.CikisYap();

@@ -147,6 +147,9 @@ internal static class Program
         servisler.AddTransient<EkipmanFormu>();
         servisler.AddTransient<MusteriEkrani>();
         servisler.AddTransient<MusteriFormu>();
+        servisler.AddTransient<PersonelEkrani>();
+        servisler.AddTransient<PersonelFormu>();
+        servisler.AddTransient<SifreFormu>();
 
         return servisler;
     }
