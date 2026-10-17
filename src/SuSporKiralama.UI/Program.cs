@@ -15,6 +15,7 @@ using SuSporKiralama.DataAccess.Repository;
 using SuSporKiralama.UI.Altyapi;
 using SuSporKiralama.UI.Ekranlar;
 using SuSporKiralama.UI.Formlar;
+using SuSporKiralama.UI.Yerellestirme;
 using SuSporKiralama.YapayZeka;
 
 namespace SuSporKiralama.UI;
@@ -29,6 +30,7 @@ internal static class Program
     private static void Main()
     {
         ApplicationConfiguration.Initialize();
+        TurkceArayuz.Uygula(); // ilk form/mesaj kutusundan önce: kültür ve DevExpress metinleri Türkçe
         HataYoneticisi.Baglan();
 
         // Açılıştaki hatalar (bozuk appsettings.json, hatalı DI kaydı) henüz ThreadException'a
