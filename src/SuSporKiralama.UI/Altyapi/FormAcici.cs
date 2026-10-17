@@ -24,4 +24,22 @@ public sealed class FormAcici(IServiceScopeFactory scopeFactory)
             throw;
         }
     }
+
+    /// <summary>
+    /// Servisi yeni ve kısa ömürlü bir kapsamda (kendi DbContext'iyle) çalıştırır, iş bitince kapsamı kapatır.
+    /// Liste ekranları her işlemi böyle yapar: uzun süre açık kalan bir DbContext'te eski (takip edilen)
+    /// nesneler birikmez, liste her yenilemede veritabanının güncel halini gösterir.
+    /// </summary>
+    public void Calistir<TServis>(Action<TServis> islem) where TServis : notnull
+    {
+        using var scope = scopeFactory.CreateScope();
+        islem(scope.ServiceProvider.GetRequiredService<TServis>());
+    }
+
+    /// <inheritdoc cref="Calistir{TServis}(Action{TServis})"/>
+    public TSonuc Getir<TServis, TSonuc>(Func<TServis, TSonuc> islem) where TServis : notnull
+    {
+        using var scope = scopeFactory.CreateScope();
+        return islem(scope.ServiceProvider.GetRequiredService<TServis>());
+    }
 }
