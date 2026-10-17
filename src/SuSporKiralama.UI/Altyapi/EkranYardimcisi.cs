@@ -25,10 +25,11 @@ public static class EkranYardimcisi
         gorunum.OptionsBehavior.Editable = false;
         gorunum.OptionsFind.FindNullPrompt = "Aramak için yazın...";
 
-        gorunum.DoubleClick += (_, _) =>
+        // Yalnızca veri satırına çift tıklanınca (başlık, grup satırı, boş alan hariç).
+        gorunum.DoubleClick += (_, e) =>
         {
-            var nokta = gorunum.GridControl.PointToClient(Control.MousePosition);
-            if (gorunum.CalcHitInfo(nokta).InDataRow)
+            var fare = DXMouseEventArgs.GetMouseArgs(gorunum.GridControl, e);
+            if (gorunum.CalcHitInfo(fare.Location).InDataRow)
                 duzenle();
         };
 

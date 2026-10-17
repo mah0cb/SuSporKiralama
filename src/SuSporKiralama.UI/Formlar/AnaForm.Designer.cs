@@ -144,7 +144,7 @@ namespace SuSporKiralama.UI.Formlar
             btnMusteriler.Id = 7;
             btnMusteriler.Name = "btnMusteriler";
             btnMusteriler.RibbonStyle = DevExpress.XtraBars.Ribbon.RibbonItemStyles.Large;
-            btnMusteriler.ItemClick += YerTutucu_ItemClick;
+            btnMusteriler.ItemClick += btnMusteriler_ItemClick;
             //
             // btnPersonel
             //

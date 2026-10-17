@@ -169,6 +169,8 @@ public partial class AnaForm : RibbonForm
         XtraMessageBox.Show($"{e.Item.Caption}: Bu ekran sonraki aşamada eklenecek.", "Bilgi",
             MessageBoxButtons.OK, MessageBoxIcon.Information);
 
+    private void btnMusteriler_ItemClick(object sender, ItemClickEventArgs e) => EkraniAc<MusteriEkrani>();
+
     private void btnCikisYap_ItemClick(object sender, ItemClickEventArgs e)
     {
         _girisServisi.CikisYap();
