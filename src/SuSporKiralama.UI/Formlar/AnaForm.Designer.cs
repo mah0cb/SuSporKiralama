@@ -45,6 +45,19 @@ namespace SuSporKiralama.UI.Formlar
             lblPersonel = new DevExpress.XtraBars.BarStaticItem();
             lblVeritabani = new DevExpress.XtraBars.BarStaticItem();
             lblSaat = new DevExpress.XtraBars.BarStaticItem();
+            btnEkle = new DevExpress.XtraBars.BarButtonItem();
+            btnDuzenle = new DevExpress.XtraBars.BarButtonItem();
+            btnSil = new DevExpress.XtraBars.BarButtonItem();
+            btnYenile = new DevExpress.XtraBars.BarButtonItem();
+            btnExcelAktar = new DevExpress.XtraBars.BarButtonItem();
+            btnFiyatGuncelle = new DevExpress.XtraBars.BarButtonItem();
+            btnDurumDegistir = new DevExpress.XtraBars.BarButtonItem();
+            btnSifreDegistir = new DevExpress.XtraBars.BarButtonItem();
+            btnAktiflikDegistir = new DevExpress.XtraBars.BarButtonItem();
+            rpcKayitIslemleri = new DevExpress.XtraBars.Ribbon.RibbonPageCategory();
+            rpKayitIslemleri = new DevExpress.XtraBars.Ribbon.RibbonPage();
+            rpgKayit = new DevExpress.XtraBars.Ribbon.RibbonPageGroup();
+            rpgEkranIslemleri = new DevExpress.XtraBars.Ribbon.RibbonPageGroup();
             rpKiralama = new DevExpress.XtraBars.Ribbon.RibbonPage();
             rpgKiralama = new DevExpress.XtraBars.Ribbon.RibbonPageGroup();
             rpKayitlar = new DevExpress.XtraBars.Ribbon.RibbonPage();
@@ -68,10 +81,11 @@ namespace SuSporKiralama.UI.Formlar
             // ribbonControl
             //
             ribbonControl.ExpandCollapseItem.Id = 0;
-            ribbonControl.Items.AddRange(new DevExpress.XtraBars.BarItem[] { ribbonControl.ExpandCollapseItem, btnYeniKiralama, btnRezervasyon, btnTeslimEt, btnIadeAl, btnAktifKiralamalar, btnEkipmanlar, btnMusteriler, btnPersonel, btnDashboard, btnEkipmanOnerisi, btnCikisYap, galeriTema, lblPersonel, lblVeritabani, lblSaat });
+            ribbonControl.Items.AddRange(new DevExpress.XtraBars.BarItem[] { ribbonControl.ExpandCollapseItem, btnYeniKiralama, btnRezervasyon, btnTeslimEt, btnIadeAl, btnAktifKiralamalar, btnEkipmanlar, btnMusteriler, btnPersonel, btnDashboard, btnEkipmanOnerisi, btnCikisYap, galeriTema, lblPersonel, lblVeritabani, lblSaat, btnEkle, btnDuzenle, btnSil, btnYenile, btnExcelAktar, btnFiyatGuncelle, btnDurumDegistir, btnSifreDegistir, btnAktiflikDegistir });
             ribbonControl.Location = new System.Drawing.Point(0, 0);
-            ribbonControl.MaxItemId = 16;
+            ribbonControl.MaxItemId = 25;
             ribbonControl.Name = "ribbonControl";
+            ribbonControl.PageCategories.AddRange(new DevExpress.XtraBars.Ribbon.RibbonPageCategory[] { rpcKayitIslemleri });
             ribbonControl.Pages.AddRange(new DevExpress.XtraBars.Ribbon.RibbonPage[] { rpKiralama, rpKayitlar, rpRaporlar, rpYapayZeka, rpSistem });
             ribbonControl.Size = new System.Drawing.Size(1024, 158);
             ribbonControl.StatusBar = ribbonStatusBar;
@@ -189,6 +203,110 @@ namespace SuSporKiralama.UI.Formlar
             lblSaat.Id = 15;
             lblSaat.Name = "lblSaat";
             //
+            // btnEkle
+            //
+            btnEkle.Caption = "Ekle";
+            btnEkle.Id = 16;
+            btnEkle.Name = "btnEkle";
+            btnEkle.RibbonStyle = DevExpress.XtraBars.Ribbon.RibbonItemStyles.Large;
+            btnEkle.ItemClick += KayitIslemi_ItemClick;
+            //
+            // btnDuzenle
+            //
+            btnDuzenle.Caption = "Düzenle";
+            btnDuzenle.Id = 17;
+            btnDuzenle.Name = "btnDuzenle";
+            btnDuzenle.RibbonStyle = DevExpress.XtraBars.Ribbon.RibbonItemStyles.Large;
+            btnDuzenle.ItemClick += KayitIslemi_ItemClick;
+            //
+            // btnSil
+            //
+            btnSil.Caption = "Sil";
+            btnSil.Id = 18;
+            btnSil.Name = "btnSil";
+            btnSil.RibbonStyle = DevExpress.XtraBars.Ribbon.RibbonItemStyles.Large;
+            btnSil.ItemClick += KayitIslemi_ItemClick;
+            //
+            // btnYenile
+            //
+            btnYenile.Caption = "Yenile";
+            btnYenile.Id = 19;
+            btnYenile.Name = "btnYenile";
+            btnYenile.RibbonStyle = DevExpress.XtraBars.Ribbon.RibbonItemStyles.Large;
+            btnYenile.ItemClick += KayitIslemi_ItemClick;
+            //
+            // btnExcelAktar
+            //
+            btnExcelAktar.Caption = "Excel'e Aktar";
+            btnExcelAktar.Id = 20;
+            btnExcelAktar.Name = "btnExcelAktar";
+            btnExcelAktar.RibbonStyle = DevExpress.XtraBars.Ribbon.RibbonItemStyles.Large;
+            btnExcelAktar.ItemClick += KayitIslemi_ItemClick;
+            //
+            // btnFiyatGuncelle
+            //
+            btnFiyatGuncelle.Caption = "Fiyat Güncelle";
+            btnFiyatGuncelle.Id = 21;
+            btnFiyatGuncelle.Name = "btnFiyatGuncelle";
+            btnFiyatGuncelle.RibbonStyle = DevExpress.XtraBars.Ribbon.RibbonItemStyles.Large;
+            btnFiyatGuncelle.ItemClick += KayitIslemi_ItemClick;
+            //
+            // btnDurumDegistir
+            //
+            btnDurumDegistir.Caption = "Durum Değiştir";
+            btnDurumDegistir.Id = 22;
+            btnDurumDegistir.Name = "btnDurumDegistir";
+            btnDurumDegistir.RibbonStyle = DevExpress.XtraBars.Ribbon.RibbonItemStyles.Large;
+            btnDurumDegistir.ItemClick += KayitIslemi_ItemClick;
+            //
+            // btnSifreDegistir
+            //
+            btnSifreDegistir.Caption = "Şifre Değiştir";
+            btnSifreDegistir.Id = 23;
+            btnSifreDegistir.Name = "btnSifreDegistir";
+            btnSifreDegistir.RibbonStyle = DevExpress.XtraBars.Ribbon.RibbonItemStyles.Large;
+            btnSifreDegistir.ItemClick += KayitIslemi_ItemClick;
+            //
+            // btnAktiflikDegistir
+            //
+            btnAktiflikDegistir.Caption = "Aktif/Pasif Yap";
+            btnAktiflikDegistir.Id = 24;
+            btnAktiflikDegistir.Name = "btnAktiflikDegistir";
+            btnAktiflikDegistir.RibbonStyle = DevExpress.XtraBars.Ribbon.RibbonItemStyles.Large;
+            btnAktiflikDegistir.ItemClick += KayitIslemi_ItemClick;
+            //
+            // rpcKayitIslemleri
+            //
+            rpcKayitIslemleri.Name = "rpcKayitIslemleri";
+            rpcKayitIslemleri.Pages.AddRange(new DevExpress.XtraBars.Ribbon.RibbonPage[] { rpKayitIslemleri });
+            rpcKayitIslemleri.Text = "Kayıt İşlemleri";
+            rpcKayitIslemleri.Visible = false;
+            //
+            // rpKayitIslemleri
+            //
+            rpKayitIslemleri.Groups.AddRange(new DevExpress.XtraBars.Ribbon.RibbonPageGroup[] { rpgKayit, rpgEkranIslemleri });
+            rpKayitIslemleri.Name = "rpKayitIslemleri";
+            rpKayitIslemleri.Text = "Kayıt İşlemleri";
+            //
+            // rpgKayit
+            //
+            rpgKayit.ItemLinks.Add(btnEkle);
+            rpgKayit.ItemLinks.Add(btnDuzenle);
+            rpgKayit.ItemLinks.Add(btnSil);
+            rpgKayit.ItemLinks.Add(btnYenile);
+            rpgKayit.ItemLinks.Add(btnExcelAktar);
+            rpgKayit.Name = "rpgKayit";
+            rpgKayit.Text = "Kayıt";
+            //
+            // rpgEkranIslemleri
+            //
+            rpgEkranIslemleri.ItemLinks.Add(btnFiyatGuncelle);
+            rpgEkranIslemleri.ItemLinks.Add(btnDurumDegistir);
+            rpgEkranIslemleri.ItemLinks.Add(btnSifreDegistir);
+            rpgEkranIslemleri.ItemLinks.Add(btnAktiflikDegistir);
+            rpgEkranIslemleri.Name = "rpgEkranIslemleri";
+            rpgEkranIslemleri.Text = "İşlemler";
+            //
             // rpKiralama
             //
             rpKiralama.Groups.AddRange(new DevExpress.XtraBars.Ribbon.RibbonPageGroup[] { rpgKiralama });
@@ -278,6 +396,11 @@ namespace SuSporKiralama.UI.Formlar
             documentManager.View = tabbedView;
             documentManager.ViewCollection.AddRange(new DevExpress.XtraBars.Docking2010.Views.BaseView[] { tabbedView });
             //
+            // tabbedView
+            //
+            tabbedView.DocumentActivated += tabbedView_DocumentActivated;
+            tabbedView.DocumentClosed += tabbedView_DocumentClosed;
+            //
             // timerSaat
             //
             timerSaat.Enabled = true;
@@ -339,5 +462,18 @@ namespace SuSporKiralama.UI.Formlar
         private DevExpress.XtraBars.Docking2010.DocumentManager documentManager;
         private DevExpress.XtraBars.Docking2010.Views.Tabbed.TabbedView tabbedView;
         private System.Windows.Forms.Timer timerSaat;
+        private DevExpress.XtraBars.BarButtonItem btnEkle;
+        private DevExpress.XtraBars.BarButtonItem btnDuzenle;
+        private DevExpress.XtraBars.BarButtonItem btnSil;
+        private DevExpress.XtraBars.BarButtonItem btnYenile;
+        private DevExpress.XtraBars.BarButtonItem btnExcelAktar;
+        private DevExpress.XtraBars.BarButtonItem btnFiyatGuncelle;
+        private DevExpress.XtraBars.BarButtonItem btnDurumDegistir;
+        private DevExpress.XtraBars.BarButtonItem btnSifreDegistir;
+        private DevExpress.XtraBars.BarButtonItem btnAktiflikDegistir;
+        private DevExpress.XtraBars.Ribbon.RibbonPageCategory rpcKayitIslemleri;
+        private DevExpress.XtraBars.Ribbon.RibbonPage rpKayitIslemleri;
+        private DevExpress.XtraBars.Ribbon.RibbonPageGroup rpgKayit;
+        private DevExpress.XtraBars.Ribbon.RibbonPageGroup rpgEkranIslemleri;
     }
 }

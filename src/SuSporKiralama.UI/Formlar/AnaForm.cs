@@ -36,6 +36,7 @@ public partial class AnaForm : RibbonForm
         InitializeComponent();
 
         ButonlariHazirla();
+        KayitButonlariniHazirla();
         lblPersonel.Caption = $"{_oturum.AdSoyad} ({_oturum.Rol})";
         lblVeritabani.Caption = $"Veritabanı: {bilgi.VeritabaniAdi}";
         SaatiGuncelle();
@@ -77,6 +78,66 @@ public partial class AnaForm : RibbonForm
                 .SelectMany(grup => grup.ItemLinks.Cast<BarItemLink>())
                 .Any(link => link.Item.Visibility != BarItemVisibility.Never);
     }
+
+    /// <summary>
+    /// "Kayıt İşlemleri" bağlamsal Ribbon sayfasındaki buton → işlem ve ikon eşlemesi. İşlem butonun
+    /// Tag'ine yazılır; tek ortak tıklama işleyicisi işlemi aktif ekrana iletir.
+    /// </summary>
+    private void KayitButonlariniHazirla()
+    {
+        (BarButtonItem Buton, KayitIslemi Islem, string Ikon)[] butonlar =
+        [
+            (btnEkle, KayitIslemi.Ekle, "svgimages/actions/new.svg"),
+            (btnDuzenle, KayitIslemi.Duzenle, "svgimages/xaf/action_edit.svg"),
+            (btnSil, KayitIslemi.Sil, "svgimages/xaf/action_delete.svg"),
+            (btnYenile, KayitIslemi.Yenile, "svgimages/xaf/action_refresh.svg"),
+            (btnExcelAktar, KayitIslemi.ExcelAktar, "svgimages/export/exporttoxlsx.svg"),
+            (btnFiyatGuncelle, KayitIslemi.FiyatGuncelle, "svgimages/dashboards/currency.svg"),
+            (btnDurumDegistir, KayitIslemi.DurumDegistir, "svgimages/xaf/action_change_state.svg"),
+            (btnSifreDegistir, KayitIslemi.SifreDegistir, "svgimages/xaf/action_security_changepassword.svg"),
+            (btnAktiflikDegistir, KayitIslemi.AktiflikDegistir, "svgimages/xaf/state_itemvisibility_show.svg")
+        ];
+
+        foreach (var (buton, islem, ikon) in butonlar)
+        {
+            buton.Tag = islem;
+            buton.ImageOptions.SvgImage = ImageResourceCache.Default.GetSvgImage(ikon);
+        }
+    }
+
+    private IKayitEkrani? AktifKayitEkrani => tabbedView.ActiveDocument?.Control as IKayitEkrani;
+
+    /// <summary>
+    /// Aktif sekme bir kayıt ekranıysa "Kayıt İşlemleri" sayfası görünür ve seçilir; butonlar o ekranın
+    /// sunduğu ve personelin yetkisinin yettiği işlemlere göre gösterilir. Başka sekmede sayfa gizlenir.
+    /// </summary>
+    private void KayitSayfasiniGuncelle()
+    {
+        var ekran = AktifKayitEkrani;
+        rpcKayitIslemleri.Visible = ekran is not null;
+        if (ekran is null)
+            return;
+
+        foreach (var grup in new[] { rpgKayit, rpgEkranIslemleri })
+        {
+            var gorunurButonVar = false;
+            foreach (BarItemLink link in grup.ItemLinks)
+            {
+                var gorunur = ekran.IslemGorunur((KayitIslemi)link.Item.Tag);
+                link.Item.Visibility = gorunur ? BarItemVisibility.Always : BarItemVisibility.Never;
+                gorunurButonVar |= gorunur;
+            }
+            grup.Visible = gorunurButonVar; // ör. Müşteri ekranında "İşlemler" grubu boştur
+        }
+        ribbonControl.SelectedPage = rpKayitIslemleri;
+    }
+
+    private void KayitIslemi_ItemClick(object sender, ItemClickEventArgs e) =>
+        AktifKayitEkrani?.Calistir((KayitIslemi)e.Item.Tag);
+
+    private void tabbedView_DocumentActivated(object sender, DocumentEventArgs e) => KayitSayfasiniGuncelle();
+
+    private void tabbedView_DocumentClosed(object sender, DocumentEventArgs e) => KayitSayfasiniGuncelle();
 
     /// <summary>
     /// Ekranı ana formun içinde sekme olarak açar. Aynı ekran zaten açıksa yenisi açılmaz,
