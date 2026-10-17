@@ -1,3 +1,4 @@
+using SuSporKiralama.Business.Guvenlik;
 using SuSporKiralama.Business.Istisnalar;
 using SuSporKiralama.Business.Servisler;
 using SuSporKiralama.Entities;
@@ -14,10 +15,13 @@ public class PersonelServisiTestleri : IDisposable
     public PersonelServisiTestleri()
     {
         // Oturumdaki yönetici veritabanına kaydedilmez; "son aktif admin" testlerini etkilemez.
-        _servis = new PersonelServisi(_db.Repo<Personel>(), _db.Repo<Kiralama>(), TestOturumu.AdminOlarakGiris().Yetki());
+        _servis = Servis(TestOturumu.AdminOlarakGiris());
     }
 
     public void Dispose() => _db.Dispose();
+
+    private PersonelServisi Servis(Oturum oturum) =>
+        new(_db.Repo<Personel>(), _db.Repo<Kiralama>(), oturum.Yetki(), oturum);
 
     private Personel AdminEkle(string kullaniciAdi = "admin") =>
         _servis.Ekle("Sistem Yöneticisi", kullaniciAdi, GecerliSifre, Rol.Admin);
@@ -223,13 +227,51 @@ public class PersonelServisiTestleri : IDisposable
         Assert.Contains("pasif", hata.Message);
     }
 
+    // --- Oturumdaki personelin kendi hesabı ---
+
+    [Fact]
+    public void AktiflikDegistir_KendiHesabi_IslemYapilamaz()
+    {
+        var admin = AdminEkle();
+        AdminEkle("admin2"); // son admin kuralı devreye girmesin
+        var servis = Servis(TestOturumu.AdminOlarakGiris(admin));
+
+        var hata = Assert.Throws<IslemYapilamazException>(() => servis.AktiflikDegistir(admin.Id, false));
+        Assert.Contains("Kendi hesabınızı", hata.Message);
+        Assert.True(_servis.IdIleGetir(admin.Id).AktifMi);
+    }
+
+    [Fact]
+    public void Sil_KendiHesabi_IslemYapilamaz()
+    {
+        var admin = AdminEkle();
+        AdminEkle("admin2");
+        var servis = Servis(TestOturumu.AdminOlarakGiris(admin));
+
+        var hata = Assert.Throws<IslemYapilamazException>(() => servis.Sil(admin.Id));
+        Assert.Contains("Kendi hesabınızı", hata.Message);
+        Assert.Equal(2, _servis.TumunuGetir().Count);
+    }
+
+    [Fact]
+    public void AktiflikDegistir_OturumdakiAdminBaskasiniPasifYapabilir()
+    {
+        var admin = AdminEkle();
+        var personel = PersonelEkle();
+        var servis = Servis(TestOturumu.AdminOlarakGiris(admin));
+
+        servis.AktiflikDegistir(personel.Id, false);
+
+        Assert.False(_servis.IdIleGetir(personel.Id).AktifMi);
+    }
+
     // --- Yetki ---
 
     [Fact]
     public void PersonelRolu_PersonelYonetimiYapamaz()
     {
         var deniz = PersonelEkle();
-        var servis = new PersonelServisi(_db.Repo<Personel>(), _db.Repo<Kiralama>(), TestOturumu.PersonelOlarakGiris().Yetki());
+        var servis = Servis(TestOturumu.PersonelOlarakGiris());
 
         Assert.Throws<YetkisizIslemException>(() => servis.Ekle("Ali Veli", "ali", GecerliSifre, Rol.Admin));
         Assert.Throws<YetkisizIslemException>(() => servis.SifreDegistir(deniz.Id, "YeniSifre123"));

@@ -7,7 +7,8 @@ using SuSporKiralama.Entities;
 
 namespace SuSporKiralama.Business.Servisler;
 
-public class PersonelServisi(IRepository<Personel> repository, IRepository<Kiralama> kiralamaRepository, IYetkiServisi yetki)
+public class PersonelServisi(IRepository<Personel> repository, IRepository<Kiralama> kiralamaRepository,
+    IYetkiServisi yetki, IOturum oturum)
     : CrudServisiTemel<Personel>(repository, yetki), IPersonelServisi
 {
     public const int MinSifreUzunlugu = 8;
@@ -72,12 +73,18 @@ public class PersonelServisi(IRepository<Personel> repository, IRepository<Kiral
         if (Repository.Find(p => p.Id == id && p.SifreHash == hash).Count == 0)
             throw new DogrulamaException("Şifre yalnızca şifre değiştirme işlemiyle değiştirilebilir.");
 
+        if (!entity.AktifMi && entity.Id == oturum.PersonelId)
+            throw new IslemYapilamazException("Kendi hesabınızı pasifleştiremezsiniz.");
+
         SonAktifAdminKorunur(entity, islemSonrasiAktifAdmin: entity.Rol == Rol.Admin && entity.AktifMi,
             "Son aktif yönetici pasifleştirilemez ve rolü değiştirilemez; sistemde en az bir aktif yönetici kalmalıdır.");
     }
 
     protected override void SilmeOncesiKontrol(Personel entity)
     {
+        if (entity.Id == oturum.PersonelId)
+            throw new IslemYapilamazException("Kendi hesabınızı silemezsiniz.");
+
         SonAktifAdminKorunur(entity, islemSonrasiAktifAdmin: false,
             "Son aktif yönetici silinemez; sistemde en az bir aktif yönetici kalmalıdır.");
 
